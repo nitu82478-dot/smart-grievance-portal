@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Grievance Management | PS-52</title>
+
+<!-- =========================================================
+     CSS SECTION
+     ========================================================= -->
+<style>
+:root{
+    --navy:#0b1f3a;
+    --navy2:#12345b;
+    --blue:#2563eb;
+    --blue2:#3b82f6;
+    --cyan:#06b6d4;
+    --bg:#f5f7fb;
+    --white:#ffffff;
+    --text:#172033;
+    --muted:#718096;
+    --border:#e7edf5;
+    --green:#16a34a;
+    --orange:#f59e0b;
+    --red:#ef4444;
+    --shadow:0 8px 25px rgba(15,35,65,.07);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:250px;
+    height:100vh;
+    background:linear-gradient(180deg,var(--navy),#102f54);
+    color:white;
+    padding:20px 15px;
+    z-index:1000;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:8px 8px 22px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+}
+
+.brand-logo{
+    width:43px;
+    height:43px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#38bdf8,#2563eb);
+    display:grid;
+    place-items:center;
+    font-size:21px;
+    box-shadow:0 8px 20px rgba(37,99,235,.3);
+}
+
+.brand-title{
+    font-weight:700;
+    font-size:16px;
+}
+
+.brand-sub{
+    display:block;
+    color:#a8bdd5;
+    font-size:10px;
+    margin-top:3px;
+}
+
+.menu-label{
+    color:#7590ad;
+    font-size:10px;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+    margin:24px 10px 9px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav-btn{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#c4d3e4;
+    padding:12px 13px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    text-align:left;
+    transition:.2s;
+}
+
+.nav-btn:hover{
+    background:rgba(255,255,255,.08);
+    color:white;
+    transform:translateX(2px);
+}
+
+.nav-btn.active{
+    background:linear-gradient(90deg,#2563eb,#3485f5);
+    color:white;
+    box-shadow:0 8px 18px rgba(37,99,235,.25);
+}
+
+.nav-icon{
+    width:22px;
+    text-align:center;
+    font-size:16px;
+}
+
+.sidebar-bottom{
+    position:absolute;
+    left:15px;
+    right:15px;
+    bottom:18px;
+    padding:13px;
+    background:rgba(255,255,255,.07);
+    border-radius:11px;
+    font-size:11px;
+    color:#b9c9dc;
+    line-height:1.5;
+}
+
+/* ================= MAIN ================= */
+
+.main{
+    margin-left:250px;
+    min-height:100vh;
+}
+
+.topbar{
+    height:72px;
+    background:white;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 30px;
+    position:sticky;
+    top:0;
+    z-index:900;
+}
+
+.title-area{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.mobile-menu{
+    display:none;
+    border:0;
+    background:var(--blue);
+    color:white;
+    border-radius:8px;
+    padding:8px 11px;
+    cursor:pointer;
+}
+
+.page-title{
+    font-size:20px;
+    font-weight:700;
+}
+
+.breadcrumb{
+    color:#94a3b8;
+    font-size:11px;
+    margin-top:2px;
+}
+
+.user-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#eaf2ff;
+    color:var(--blue);
+    display:grid;
+    place-items:center;
+    font-weight:700;
+}
+
+.user-box small{
+    color:#94a3b8;
+    font-size:11px;
+}
+
+/* ================= MARQUEE ================= */
+
+.notice{
+    height:40px;
+    background:#eef7ff;
+    border-bottom:1px solid #dbeafe;
+    display:flex;
+    align-items:center;
+    color:#245a9b;
+    font-size:12px;
+}
+
+.notice strong{
+    padding:0 15px;
+    white-space:nowrap;
+}
+
+.notice marquee{
+    flex:1;
+}
+
+/* ================= CONTENT ================= */
+
+.content{
+    max-width:1500px;
+    margin:auto;
+    padding:28px;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+    animation:pageIn .2s ease;
+}
+
+@keyframes pageIn{
+    from{opacity:0;transform:translateY(5px)}
+    to{opacity:1;transform:translateY(0)}
+}
+
+/* ================= HERO ================= */
+
+.hero{
+    min-height:260px;
+    padding:34px;
+    border-radius:20px;
+    color:white;
+    background:
+        radial-gradient(circle at 85% 20%,rgba(255,255,255,.15),transparent 30%),
+        linear-gradient(135deg,#123e73,#2563eb 65%,#168bd8);
+    box-shadow:0 14px 35px rgba(37,99,235,.17);
+    position:relative;
+    overflow:hidden;
+}
+
+.hero:after{
+    content:"";
+    position:absolute;
+    width:230px;
+    height:230px;
+    right:-70px;
+    bottom:-100px;
+    border:35px solid rgba(255,255,255,.08);
+    border-radius:50%;
+}
+
+.hero-tag{
+    display:inline-block;
+    padding:6px 10px;
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:20px;
+    font-size:11px;
+    margin-bottom:15px;
+}
+
+.hero h1{
+    font-size:32px;
+    margin-bottom:10px;
+}
+
+.hero p{
+    max-width:750px;
+    line-height:1.7;
+    color:#e8f2ff;
+    font-size:14px;
+}
+
+.hero-actions{
+    margin-top:22px;
+}
+
+.btn{
+    border:0;
+    border-radius:8px;
+    padding:11px 17px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+}
+
+.btn-primary{
+    background:var(--blue);
+    color:white;
+}
+
+.btn-white{
+    background:white;
+    color:#1856ae;
+}
+
+.btn-soft{
+    background:#edf4ff;
+    color:#2059b5;
+}
+
+.btn-danger{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+/* ================= STATS ================= */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin:20px 0;
+}
+
+.stat{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:19px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+}
+
+.stat:before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:4px;
+    background:var(--blue);
+}
+
+.stat:nth-child(2):before{background:var(--orange)}
+.stat:nth-child(3):before{background:#8b5cf6}
+.stat:nth-child(4):before{background:var(--green)}
+
+.stat-label{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.stat-value{
+    font-size:28px;
+    font-weight:750;
+    margin-top:7px;
+}
+
+.stat-foot{
+    margin-top:7px;
+    color:#94a3b8;
+    font-size:11px;
+}
+
+/* ================= GRID / CARD ================= */
+
+.two-col{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:18px;
+}
+
+.card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:21px;
+    box-shadow:var(--shadow);
+    margin-bottom:18px;
+}
+
+.card h2{
+    font-size:18px;
+    margin-bottom:12px;
+}
+
+.card h3{
+    font-size:15px;
+    margin-bottom:7px;
+}
+
+.card p{
+    color:#596579;
+    line-height:1.7;
+    font-size:13px;
+}
+
+.feature{
+    display:flex;
+    gap:12px;
+    margin-top:16px;
+}
+
+.feature-icon{
+    min-width:38px;
+    height:38px;
+    border-radius:10px;
+    background:#edf4ff;
+    color:var(--blue);
+    display:grid;
+    place-items:center;
+}
+
+.feature b{
+    font-size:13px;
+}
+
+.feature p{
+    font-size:12px;
+    margin-top:3px;
+}
+
+/* ================= FORM ================= */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.field.full{
+    grid-column:1/-1;
+}
+
+.field label{
+    font-size:12px;
+    font-weight:700;
+    color:#344054;
+}
+
+.field input,
+.field select,
+.field textarea{
+    width:100%;
+    border:1px solid #d6dee9;
+    border-radius:8px;
+    padding:11px 12px;
+    outline:none;
+    background:#fff;
+    color:#172033;
+}
+
+.field textarea{
+    min-height:115px;
+    resize:vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+    border-color:#4d87ef;
+    box-shadow:0 0 0 3px rgba(37,99,235,.08);
+}
+
+/* ================= LOGIN / PHOTO UPLOAD ================= */
+.auth-actions{display:flex;align-items:center;gap:8px}
+.auth-btn{border:1px solid #dbeafe;background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.auth-btn.department{background:#eefdf5;color:#15803d;border-color:#bbf7d0}
+.system-status{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:20px;background:#effdf5;border:1px solid #c8f2d7;color:#15803d;font-size:10px;font-weight:800;white-space:nowrap}
+.system-status i{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+.system-status.offline{background:#fff1f2;border-color:#fecdd3;color:#be123c}.system-status.offline i{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.13)}
+.logout-btn{display:none;border:1px solid #dbe5f1;background:#fff;color:#64748b;border-radius:8px;width:30px;height:30px;align-items:center;justify-content:center;cursor:pointer;font-size:17px}.logout-btn:hover{color:#dc2626;border-color:#fecaca;background:#fff7f7}
+.photo-upload{border:1px dashed #93c5fd;background:#f8fbff;border-radius:10px;padding:13px}
+.photo-upload input{border:0;padding:0;background:transparent}
+.photo-help{display:block;color:#718096;font-size:11px;margin-top:6px}
+.photo-preview{display:none;align-items:center;gap:10px;margin-top:10px;padding:8px;background:#fff;border:1px solid var(--border);border-radius:8px}
+.photo-preview img{width:58px;height:58px;object-fit:cover;border-radius:7px}
+.photo-preview span{font-size:11px;color:#526074;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero-visual{position:absolute;right:35px;top:34px;width:205px;padding:15px;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(8,39,84,.24);backdrop-filter:blur(8px);display:grid;gap:13px;color:#fff}
+.hero-visual>div:not(.hero-visual-ring){display:grid;gap:3px;padding-left:8px;border-left:2px solid #79d8ff}
+.hero-visual b{font-size:10px;letter-spacing:1px}.hero-visual span{font-size:10px;color:#cfe5ff;line-height:1.4}.hero-visual-ring{width:43px;height:43px;border:1px solid rgba(255,255,255,.5);border-radius:50%;display:grid;place-items:center;font-size:27px;color:#91e5ff}
+.auth-modal{position:fixed;inset:0;background:rgba(11,31,58,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:2000}
+.auth-modal.open{display:flex}
+.auth-panel{width:min(430px,100%);background:#fff;border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative}
+.auth-close{position:absolute;right:15px;top:12px;border:0;background:transparent;font-size:22px;color:#718096;cursor:pointer}
+.auth-panel h2{font-size:21px;margin-bottom:5px}.auth-panel>p{font-size:12px;color:#718096;margin-bottom:17px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#f1f5f9;padding:4px;border-radius:9px;margin-bottom:16px}
+.auth-tab{border:0;padding:9px;border-radius:7px;background:transparent;color:#64748b;font-weight:700;cursor:pointer}.auth-tab.active{background:#fff;color:#1d4ed8;box-shadow:0 2px 7px rgba(15,35,65,.08)}
+.auth-form{display:grid;gap:12px}.auth-form label{font-size:11px;font-weight:700;color:#344054}.auth-form input,.auth-form select{width:100%;padding:11px;border:1px solid #d6dee9;border-radius:8px;margin-top:5px;outline:none}.auth-form input:focus,.auth-form select:focus{border-color:#4d87ef;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.auth-status{font-size:11px;min-height:16px;color:#dc2626}.auth-status.success{color:#15803d}.login-page .sidebar,.login-page .gov-strip,.login-page .portal-masthead,.login-page .home-nav,.login-page .notice{display:none}.login-page .main{margin-left:0}.login-page .topbar{border-bottom:1px solid #e5ebf3}.login-page .auth-actions{display:none}.login-page .content{min-height:calc(100vh - 150px);display:grid;place-items:center;padding:38px 22px;background:linear-gradient(135deg,#f4f8ff,#fff8fc)}.login-page .user-box{display:none}.login-page .page-title{font-size:18px}.login-page .breadcrumb{display:none}.login-shell{width:min(920px,100%);display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}.login-visual{border-radius:22px;padding:34px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;min-height:430px;box-shadow:0 18px 40px rgba(37,99,235,.15)}.user-login-visual{background:linear-gradient(145deg,#123e73,#2563eb 68%,#209bd0)}.department-login-visual{background:linear-gradient(145deg,#44132f,#74154f 68%,#b52b76)}.login-visual .login-kicker{font-size:10px;letter-spacing:.14em;font-weight:800;opacity:.8}.login-visual h1{font-size:31px;line-height:1.1;margin:12px 0}.login-visual p{font-size:13px;line-height:1.7;color:#e7f0ff;max-width:330px}.login-visual .login-points{display:grid;gap:10px;font-size:11px;color:#eef6ff}.login-card{background:#fff;border:1px solid #e3eaf4;border-radius:22px;padding:30px;box-shadow:0 18px 42px rgba(15,35,65,.1)}.login-card h2{font-size:24px;color:#132643;margin:12px 0 6px}.login-card>p{font-size:12px;color:#718096;margin-bottom:20px;line-height:1.5}.login-card .auth-form{gap:14px}.login-back{border:0;background:transparent;color:#245a9b;font-size:11px;font-weight:700;padding:0;cursor:pointer}.login-register{width:100%;margin-top:12px}.login-helper{display:block;margin-top:14px;color:#94a3b8;font-size:10px;line-height:1.5}@media(max-width:800px){.login-shell{grid-template-columns:1fr}.login-visual{min-height:240px}.login-page .content{place-items:start;padding-top:22px}}
+@media(max-width:700px){.auth-actions .department{display:none}.auth-btn{padding:8px 9px;font-size:11px}}
+
+.form-actions{
+    margin-top:20px;
+    display:flex;
+    gap:8px;
+}
+
+/* ================= TABLE ================= */
+
+.table-wrap{
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:13px 11px;
+    border-bottom:1px solid var(--border);
+    text-align:left;
+    white-space:nowrap;
+    font-size:12px;
+}
+
+th{
+    background:#f8fafc;
+    color:#526074;
+}
+
+.status{
+    display:inline-block;
+    border-radius:20px;
+    padding:5px 9px;
+    font-size:10px;
+    font-weight:700;
+}
+
+.status.pending{
+    color:#b45309;
+    background:#fff7ed;
+}
+
+.status.progress{
+    color:#1d4ed8;
+    background:#eff6ff;
+}
+
+.status.resolved{
+    color:#15803d;
+    background:#f0fdf4;
+}
+
+/* ================= TRACK ================= */
+
+.track-card{
+    max-width:760px;
+    margin:auto;
+}
+
+.track-input{
+    display:flex;
+    margin-top:18px;
+}
+
+.track-input input{
+    flex:1;
+    border:1px solid #d6dee9;
+    padding:12px;
+    border-radius:8px 0 0 8px;
+    outline:none;
+}
+
+.track-input button{
+    border:0;
+    background:var(--blue);
+    color:white;
+    padding:0 20px;
+    border-radius:0 8px 8px 0;
+}
+
+.track-result{
+    margin-top:20px;
+}
+
+.info-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:15px;
+}
+
+.info-box{
+    background:#f8fafc;
+    border:1px solid var(--border);
+    padding:12px;
+    border-radius:9px;
+}
+
+.info-box small{
+    display:block;
+    color:#94a3b8;
+    margin-bottom:4px;
+}
+
+.timeline{
+    margin-top:22px;
+}
+
+.timeline-item{
+    position:relative;
+    padding:0 0 22px 31px;
+    border-left:2px solid #dbeafe;
+}
+
+.timeline-item:last-child{
+    border-left:0;
+}
+
+.timeline-dot{
+    position:absolute;
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    background:var(--blue);
+    left:-7px;
+    top:2px;
+    box-shadow:0 0 0 4px #eaf2ff;
+}
+
+.timeline-item b{
+    font-size:13px;
+}
+
+.timeline-item p{
+    margin-top:3px;
+    font-size:12px;
+}
+
+.feedback-card{margin-top:20px;padding:16px;border:1px solid #dbe7f5;border-radius:12px;background:#f8fbff}.feedback-card.submitted{background:#f0fdf4;border-color:#bbf7d0}.feedback-card.locked{background:#fafafa;color:#64748b}.feedback-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.feedback-card h4{font-size:13px;color:#173252}.feedback-stars{color:#f59e0b;letter-spacing:2px;font-size:17px}.feedback-form{display:grid;gap:9px;margin-top:10px}.feedback-form label{font-size:11px;font-weight:700;color:#344054}.feedback-form select,.feedback-form textarea{width:100%;border:1px solid #d6dee9;border-radius:8px;padding:9px;background:#fff;font:inherit;font-size:12px}.feedback-form textarea{min-height:70px;resize:vertical}.feedback-submit{justify-self:start;border:0;border-radius:8px;padding:9px 13px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;cursor:pointer}.feedback-submit:disabled{opacity:.6;cursor:wait}.feedback-status{font-size:11px;color:#15803d;min-height:15px}
+
+/* ================= AI ================= */
+
+.ai-flow{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    margin-top:20px;
+}
+
+.ai-box{
+    background:#f8fbff;
+    border:1px solid #dceaff;
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+}
+
+.ai-num{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:var(--blue);
+    color:white;
+    display:grid;
+    place-items:center;
+    margin:0 auto 10px;
+    font-weight:bold;
+}
+
+.ai-box b{
+    font-size:12px;
+}
+
+.ai-box p{
+    font-size:11px;
+    margin-top:5px;
+}
+
+.ai-demo{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:22px}
+.ai-input-panel,.ai-results{border:1px solid var(--border);border-radius:12px;padding:17px;background:#fbfdff}
+.ai-input-panel label{display:block;font-weight:700;font-size:12px;margin-bottom:8px;color:#344054}
+.ai-input-panel textarea{width:100%;min-height:118px;resize:vertical;border:1px solid #d6dee9;border-radius:9px;padding:12px;outline:none;font:inherit;font-size:13px;line-height:1.5}
+.ai-input-panel textarea:focus{border-color:#4d87ef;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.ai-input-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+.ai-input-footer span{font-size:11px;color:#94a3b8}
+.ai-samples{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:16px}
+.ai-samples>span{font-size:11px;color:#718096}
+.ai-chip{border:1px solid #dceaff;background:#fff;color:#245a9b;padding:6px 9px;border-radius:18px;font-size:11px;cursor:pointer;transition:.2s}
+.ai-chip:hover{background:#edf4ff;border-color:#93c5fd}
+.ai-results{display:flex;min-height:220px;align-items:center;justify-content:center}
+.ai-empty{text-align:center;padding:20px}
+.ai-empty>span{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:#edf4ff;font-size:21px;margin:0 auto 10px}
+.ai-empty b{font-size:13px}
+.ai-empty p{margin-top:5px;font-size:12px}
+.ai-loading{text-align:center;color:#526074;font-size:12px}
+.ai-spinner{width:32px;height:32px;border:3px solid #dbeafe;border-top-color:var(--blue);border-radius:50%;animation:aiSpin .75s linear infinite;margin:0 auto 12px}
+@keyframes aiSpin{to{transform:rotate(360deg)}}
+.ai-result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ai-result-head b{font-size:13px}
+.ai-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ai-result-item{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px}
+.ai-result-item small{display:block;color:#94a3b8;font-size:10px;margin-bottom:4px}
+.ai-result-item b{font-size:12px}
+.ai-confidence{margin-top:12px;font-size:11px;color:#718096}
+.ai-confidence-track{height:6px;background:#eaf2ff;border-radius:5px;margin-top:6px;overflow:hidden}
+.ai-confidence-fill{height:100%;width:0;background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:5px;transition:width .6s ease}
+.ai-note{font-size:11px;color:#718096;margin-top:12px}
+.public-access-note{display:flex;gap:9px;align-items:flex-start;margin:0 0 20px;padding:11px 13px;border:1px solid #cfe2ff;border-radius:10px;background:#f4f8ff;color:#315477;font-size:12px;line-height:1.5}.public-access-note b{color:#173252}.ai-route-note{margin-top:13px;padding:10px 12px;border:1px solid #d6e8ff;border-radius:9px;background:#f7fbff;color:#48627d;font-size:11px;line-height:1.5}.ai-route-action{display:flex;justify-content:flex-end;margin-top:13px}.ai-use-result{font-size:11px;padding:9px 12px}.voice-input-wrap{display:grid;gap:8px}.voice-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.voice-lang{border:1px solid #d6dee9;border-radius:8px;padding:8px 9px;background:#fff;color:#344054;font-size:11px}.voice-btn{border:1px solid #bcd5ff;border-radius:8px;padding:8px 11px;background:#eff6ff;color:#245a9b;font-size:11px;font-weight:700;cursor:pointer}.voice-btn:hover{background:#e0edff}.voice-btn.listening{background:#fee2e2;border-color:#fecaca;color:#b91c1c}.voice-btn:disabled{opacity:.55;cursor:not-allowed}.voice-status{font-size:11px;color:#718096}.voice-privacy{font-size:10px;color:#94a3b8}
+.ai-box{transition:border-color .2s,transform .2s,box-shadow .2s}
+.ai-box.active{border-color:#60a5fa;background:#eff6ff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(37,99,235,.1)}
+.ai-box.complete .ai-num{background:#16a34a}
+@media(max-width:850px){.ai-demo{grid-template-columns:1fr}}
+.about-hero{position:relative;overflow:hidden;min-height:280px;border-radius:18px;padding:34px 38px;background:linear-gradient(115deg,#0d2d50,#174e8b 58%,#2b77df);color:white;box-shadow:0 14px 35px rgba(27,78,139,.17);display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.about-hero-content{position:relative;z-index:2;max-width:650px}
+.about-eyebrow{display:inline-flex;padding:6px 10px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);border-radius:20px;color:#d5e8ff;font-size:10px;letter-spacing:.6px}
+.about-hero h2{font-size:31px;line-height:1.18;margin:15px 0 9px;letter-spacing:-.5px}
+.about-hero h2 span{color:#93d9ff}
+.about-hero-content>p{color:#d9e9fc;font-size:13px;line-height:1.7;max-width:560px}
+.about-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:17px}
+.about-tags span{font-size:10px;color:white;background:rgba(255,255,255,.12);padding:7px 10px;border-radius:20px}
+.about-hero-mark{position:relative;z-index:1;width:170px;height:170px;flex:none;margin:0 35px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#e5f3ff;font-size:10px;letter-spacing:2px;text-align:center}
+.about-mark-icon{font-size:43px;width:78px;height:78px;border-radius:24px;display:grid;place-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.about-mark-ring,.about-orbit{position:absolute;border:1px solid rgba(255,255,255,.15);border-radius:50%}
+.about-mark-ring{inset:0}
+.about-orbit-one{width:300px;height:300px;right:-95px;top:-150px}.about-orbit-two{width:200px;height:200px;right:180px;bottom:-155px}
+.about-intro-grid{display:grid;grid-template-columns:1fr 1fr .85fr;gap:14px;margin-bottom:18px}
+.about-info-card{background:white;border:1px solid var(--border);border-radius:14px;padding:19px;box-shadow:var(--shadow)}
+.about-card-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#edf4ff;font-size:18px;margin-bottom:13px}
+.about-kicker{font-size:9px;font-weight:800;letter-spacing:1.1px;color:#6c85a5}
+.about-info-card h3{font-size:15px;margin:7px 0 6px;color:#172033}
+.about-info-card p{font-size:11px;line-height:1.65;color:#667085}
+.about-fact-card{background:linear-gradient(145deg,#fff,#f7faff)}
+.about-fact{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.about-fact:last-child{border:0}.about-fact b{font-size:12px;color:#1d4ed8}.about-fact span{font-size:10px;color:#7a8798;text-align:right}
+.about-roadmap{padding:21px}
+.about-roadmap-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.about-roadmap-heading h2{font-size:17px;margin:5px 0 0}.about-rocket{font-size:23px;width:42px;height:42px;border-radius:12px;background:#edf4ff;display:grid;place-items:center}
+.about-roadmap-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.about-roadmap-item{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fbfdff}
+.about-roadmap-item>span{font-size:17px}.about-roadmap-item b{font-size:11px;display:block}.about-roadmap-item small{font-size:10px;display:block;color:#7a8798;margin-top:4px;line-height:1.4}
+.about-note{text-align:center;font-size:10px;color:#8a96a8;margin:12px 0 4px}
+@media(max-width:950px){.about-intro-grid{grid-template-columns:1fr 1fr}.about-fact-card{grid-column:1/-1}.about-roadmap-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.about-hero{padding:25px;min-height:0}.about-hero-mark{display:none}.about-hero h2{font-size:25px}.about-intro-grid,.about-roadmap-grid{grid-template-columns:1fr}.about-fact-card{grid-column:auto}.about-fact{justify-content:flex-start;gap:18px}.about-fact span{text-align:left}}
+/* ================= FOOTER ================= */
+
+/* ================= PRODUCT-STYLE REDESIGN ================= */
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f7fb;color:#14243d}
+.sidebar-toggle{display:grid;place-items:center;width:34px;height:34px;border:1px solid #dce6f2;border-radius:9px;background:#fff;color:#31577f;cursor:pointer;font-size:17px;transition:.2s}.sidebar-toggle:hover{background:#eef5ff;color:#2563eb}
+.sidebar-collapsed .sidebar{width:82px;padding:19px 10px}.sidebar-collapsed .main{margin-left:82px}.sidebar-collapsed .brand{justify-content:center;padding:5px 0 23px}.sidebar-collapsed .brand>div:last-child,.sidebar-collapsed .menu-label,.sidebar-collapsed .sidebar-bottom{display:none}.sidebar-collapsed .nav-btn{justify-content:center;padding:12px 8px;font-size:0}.sidebar-collapsed .nav-icon{font-size:18px}
+.sidebar{width:268px;padding:22px 17px;background:linear-gradient(180deg,#071a35 0%,#0b2e58 100%);box-shadow:16px 0 36px rgba(5,28,59,.13)}
+.main{margin-left:268px}
+.brand{padding:8px 9px 25px}.brand-logo{width:46px;height:46px;border-radius:14px}.brand-title{font-size:17px;letter-spacing:-.03em}.brand-sub{font-size:10px;color:#9db7d4}
+.menu-label{font-size:9px;letter-spacing:.16em;margin:29px 11px 11px;color:#7f9bbb}.nav{gap:6px}.nav-btn{min-height:44px;padding:12px 14px;border-radius:11px;font-size:12px;color:#b9cbe0}.nav-btn:hover{background:rgba(255,255,255,.09);transform:none}.nav-btn.active{background:linear-gradient(100deg,#2b6ff3,#3c8df7);box-shadow:0 10px 24px rgba(35,105,240,.25)}.nav-icon{font-size:17px}.sidebar-bottom{left:17px;right:17px;bottom:20px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);padding:14px;font-size:10px}
+.gov-strip{padding:7px 34px;background:#591138}.portal-masthead{padding:15px 34px;min-height:86px}.portal-identity b{font-size:18px}.portal-emblem{border-radius:13px}
+.topbar{height:74px;padding:0 34px;background:rgba(255,255,255,.92);box-shadow:0 1px 0 #e8edf4}.page-title{font-size:22px;font-weight:800}.auth-actions{gap:8px}.auth-btn{font-size:11px;padding:10px 13px}.user-box{padding-left:8px;border-left:1px solid #e5ebf3}
+.notice{padding:0 34px;height:40px}.notice strong{padding:0 13px 0 0;font-size:10px}.notice-text{font-size:11px}
+.content{max-width:1480px;padding:34px}.hero{min-height:340px;padding:44px;border-radius:25px;background:radial-gradient(circle at 83% 20%,rgba(96,213,255,.28),transparent 22%),radial-gradient(circle at 95% 90%,rgba(255,255,255,.16),transparent 30%),linear-gradient(120deg,#0b2d5b 0%,#1756ac 55%,#2879e6 100%);box-shadow:0 22px 45px rgba(23,86,172,.2)}.hero h1{max-width:590px;font-size:40px;line-height:1.08;letter-spacing:-.045em}.hero p{max-width:595px;font-size:14px;line-height:1.75}.hero-actions{display:flex;gap:10px}.hero-visual{right:44px;top:44px;width:220px;padding:18px;border-radius:18px;background:rgba(3,27,65,.31)}
+.stats{gap:15px;margin:22px 0}.stat{border-radius:16px;padding:20px 21px}.stat-label{font-size:11px;font-weight:700}.stat-value{font-size:31px;margin-top:9px}.stat-foot{font-size:10px}
+.two-col{gap:20px}.card{padding:24px;border-radius:16px;box-shadow:0 8px 25px rgba(15,35,65,.055)}.card h2{font-size:18px}.feature{margin-top:18px}.feature-icon{border-radius:12px}
+.form-grid{gap:18px}.field input,.field select,.field textarea{border-radius:10px;padding:12px 13px}.form-actions{align-items:center}
+.table-wrap{border:1px solid #e5ebf3;border-radius:11px}.table-wrap table{min-width:640px}th{padding:14px 12px;font-size:10px}td{padding:14px 12px}
+.auth-modal{background:rgba(5,20,42,.66)}.auth-panel{border-radius:20px;padding:28px;box-shadow:0 28px 90px rgba(0,0,0,.28)}
+
+@media(max-width:1100px) and (min-width:701px){
+    .sidebar{width:82px;padding:19px 10px}.main{margin-left:82px}.brand{justify-content:center;padding:5px 0 23px}.brand>div:last-child,.menu-label,.sidebar-bottom{display:none}.nav-btn{justify-content:center;padding:12px 8px;font-size:0}.nav-icon{font-size:18px}.portal-masthead,.topbar{padding-left:20px;padding-right:20px}.content{padding:22px}.hero{padding:32px;min-height:300px}.hero h1{font-size:32px;max-width:60%}.hero p{max-width:58%}.hero-visual{display:none}.auth-actions .department,.system-status{display:none}
+}
+@media(max-width:700px){.sidebar-toggle{display:none}.sidebar{width:250px}.main{margin-left:0}.portal-masthead{padding:12px 16px}.topbar{padding:0 15px}.notice{padding:0 15px}.content{padding:16px}.hero{min-height:300px;padding:27px}.hero h1{font-size:29px}.hero p{font-size:13px}.hero-visual{display:none}.user-box{border:0}.stats{gap:11px}}
+body.home-simple .sidebar{display:none}body.home-simple .main{margin-left:0}body.home-simple .gov-strip,body.home-simple .portal-masthead{display:none}body.home-simple .topbar{border-bottom:1px solid #e8edf4}body.home-simple .content{max-width:1180px;padding:48px 34px}body.home-simple .hero{max-width:1120px;margin:0 auto;min-height:360px}body.home-simple .stats{max-width:1120px;margin:22px auto}body.home-simple .two-col{max-width:1120px;margin:0 auto}body.home-simple .sidebar-toggle{display:grid}
+@media(max-width:700px){body.home-simple .content{padding:22px 16px}body.home-simple .sidebar-toggle{display:none}}
+.home-nav{min-height:48px;display:flex;align-items:center;gap:5px;padding:0 34px;background:#fff;border-bottom:1px solid #e6ebf2;overflow-x:auto;white-space:nowrap}.home-nav button{border:0;background:transparent;color:#52657d;padding:14px 15px;font-size:11px;font-weight:750;cursor:pointer;border-bottom:2px solid transparent}.home-nav button:hover,.home-nav button:focus{color:#74154f;border-bottom-color:#b52b76;background:#fff8fc}.home-nav button:first-child{color:#74154f;border-bottom-color:#b52b76}body.home-simple .gov-strip{display:none}body.home-simple .portal-masthead{display:flex}
+@media(max-width:700px){.home-nav{padding:0 10px;gap:0}.home-nav button{padding:13px 11px;font-size:10px}.portal-masthead{min-height:70px}}
+
+footer{
+    padding:24px 28px;
+    text-align:center;
+    color:#8a96a8;
+    font-size:11px;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:950px){
+    .stats{grid-template-columns:1fr 1fr}
+    .two-col{grid-template-columns:1fr}
+    .ai-flow{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:700px){
+    .sidebar{
+        transform:translateX(-100%);
+        transition:.25s;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+    }
+
+    .main{
+        margin-left:0;
+    }
+
+    .mobile-menu{
+        display:block;
+    }
+
+    .topbar{
+        padding:0 15px;
+    }
+
+    .content{
+        padding:16px;
+    }
+
+    .hero{
+        padding:25px;
+    }
+
+    .hero h1{
+        font-size:25px;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .field.full{
+        grid-column:auto;
+    }
+
+    .info-grid{
+        grid-template-columns:1fr;
+    }
+
+    .ai-flow{
+        grid-template-columns:1fr;
+    }
+
+    .user-name{
+        display:none;
+    }
+}
+
+/* ================= PROFESSIONAL VISUAL POLISH ================= */
+:root{
+    --navy:#0b1b34;
+    --navy2:#123867;
+    --blue:#2563eb;
+    --blue2:#4f8df7;
+    --bg:#f4f7fb;
+    --border:#e5ebf3;
+    --shadow:0 10px 28px rgba(16,42,79,.07);
+}
+body{
+    background:
+        radial-gradient(circle at 88% -8%,rgba(79,141,247,.10),transparent 28%),
+        linear-gradient(180deg,#f8faff 0%,var(--bg) 35%,#f4f7fb 100%);
+    color:#162338;
+    letter-spacing:.01em;
+}
+.sidebar{
+    background:linear-gradient(180deg,#0b1b34 0%,#102f56 100%);
+    border-right:1px solid rgba(255,255,255,.08);
+    box-shadow:12px 0 32px rgba(10,31,59,.10);
+}
+.brand{padding:10px 9px 24px}
+.brand-logo{background:linear-gradient(135deg,#45c7ff,#2563eb);box-shadow:0 10px 24px rgba(37,99,235,.35)}
+.nav{gap:7px}
+.nav-btn{font-size:12px;padding:12px 14px;color:#c7d5e7}
+.nav-btn.active{background:linear-gradient(100deg,#2563eb,#3c82f6);box-shadow:0 10px 22px rgba(37,99,235,.28)}
+.main{background:transparent}
+.gov-strip{min-height:35px;padding:7px 30px;background:#641343;color:#fff;display:flex;align-items:center;justify-content:space-between;font-size:10px;gap:16px}.gov-strip div:first-child{display:flex;align-items:center;gap:10px}.gov-strip b{letter-spacing:.08em}.gov-strip span{opacity:.86}.gov-strip em{font-style:normal;opacity:.65;border-left:1px solid rgba(255,255,255,.35);padding-left:10px}.gov-links{display:flex;gap:17px;opacity:.9}.portal-masthead{min-height:82px;padding:12px 30px;background:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e6eaf1}.portal-identity{display:flex;align-items:center;gap:12px}.portal-emblem{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#7d1c58,#b52b76);color:#fff;font-weight:900;font-size:15px;letter-spacing:-.06em}.portal-identity small{display:block;color:#8a4b72;font-size:9px;font-weight:800;letter-spacing:.14em}.portal-identity b{display:block;color:#182945;font-size:17px;margin-top:3px}.portal-identity span{display:block;color:#7c8da3;font-size:10px;margin-top:3px}.portal-mark{display:flex;align-items:center;gap:9px;color:#631344;font-weight:800}.portal-mark strong{font-size:22px;letter-spacing:-.08em}.portal-mark span{font-size:11px}
+.topbar{
+    height:76px;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(218,226,238,.85);
+    box-shadow:0 2px 18px rgba(16,42,79,.03);
+}
+.page-title{font-size:21px;letter-spacing:-.02em;color:#10203a}
+.breadcrumb{font-size:11px;color:#8b9bb0}
+.avatar{background:linear-gradient(135deg,#e3efff,#f3f7ff);border:1px solid #d7e6ff}
+.notice{height:42px;background:linear-gradient(90deg,#eef6ff,#f7fbff);border-bottom:1px solid #dbeafe;color:#245a9b}
+.notice-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding-right:18px;color:#56708f;font-size:11px}
+.content{padding:32px;max-width:1540px}
+.page.active{animation:pageIn .28s ease}
+.hero{min-height:285px;padding:40px;border-radius:22px;background:radial-gradient(circle at 83% 18%,rgba(255,255,255,.18),transparent 26%),linear-gradient(120deg,#0f3565,#2563eb 64%,#168bd8);box-shadow:0 18px 42px rgba(37,99,235,.18)}
+.hero h1{font-size:35px;letter-spacing:-.035em;line-height:1.13}
+.hero p{font-size:14px;max-width:700px;color:#e6f0ff}
+.hero-tag{background:rgba(255,255,255,.13);font-weight:700;letter-spacing:.04em}
+.btn{border-radius:9px;padding:11px 17px;box-shadow:0 4px 10px rgba(15,35,65,.04)}
+.btn-primary{background:linear-gradient(100deg,#2563eb,#3b82f6);box-shadow:0 7px 16px rgba(37,99,235,.18)}
+.btn-soft{background:#eef5ff;color:#2059b5;border:1px solid #dbeafe}
+.stats{gap:18px;margin:22px 0}
+.stat,.card,.about-info-card{border:1px solid rgba(222,230,240,.95);box-shadow:var(--shadow)}
+.stat{border-radius:15px;padding:21px;background:rgba(255,255,255,.94)}
+.stat-value{font-size:30px;letter-spacing:-.03em;color:#142844}
+.card{border-radius:16px;padding:23px;background:rgba(255,255,255,.96)}
+.card h2{font-size:18px;letter-spacing:-.015em;color:#162c4a}
+.card h3{color:#1b3555}
+.feature-icon{background:#eef5ff;border:1px solid #e0ecff}
+.field input,.field select,.field textarea{border-color:#d6e0ed;border-radius:9px;padding:12px;background:#fff;transition:border-color .2s,box-shadow .2s,transform .2s}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:#b9cbe2}
+.field label{color:#334967;letter-spacing:.01em}
+.table-wrap{border:1px solid var(--border);border-radius:10px}
+th{background:#f5f8fc;color:#526074;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+td{font-size:12px}
+.auth-modal{background:rgba(8,25,49,.66);backdrop-filter:blur(5px)}
+.auth-panel{border:1px solid rgba(255,255,255,.75);border-radius:18px;box-shadow:0 24px 80px rgba(3,16,35,.28);padding:27px}
+.auth-panel h2{letter-spacing:-.025em;color:#132643}
+.auth-tabs{border:1px solid #e4ebf4}
+.auth-btn{box-shadow:0 3px 9px rgba(37,99,235,.07)}
+.photo-upload{border-color:#a8caff;background:linear-gradient(180deg,#f8fbff,#f4f8ff)}
+.desk-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}.desk-heading h2{margin:5px 0 6px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.13em;color:#8a4b72}.desk-dept{padding:8px 11px;border-radius:20px;background:#f3e9f0;color:#75164f;font-size:11px;font-weight:800}.desk-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 20px}.desk-stats>div{padding:14px;border-radius:11px;background:#f8fafc;border:1px solid #e7edf5}.desk-stats small{display:block;color:#7a8a9e;font-size:10px}.desk-stats b{display:block;margin-top:5px;font-size:22px;color:#173252}.department-only{border-left:2px solid #d78bb7}@media(max-width:700px){.desk-heading{display:block}.desk-dept{display:inline-block;margin-top:12px}.desk-stats{grid-template-columns:1fr 1fr}}
+.photo-info img{display:block;width:100px;height:70px;object-fit:cover;border-radius:7px;margin-top:6px}.photo-info span{display:block;font-size:10px;margin-top:5px;color:#6b7b90}.timeline h4{font-size:12px;color:#526074;margin-bottom:13px}.timeline-item p small{display:block;color:#94a3b8;font-size:10px;margin-top:4px}
+.desk-status{border:1px solid #d6e0ed;border-radius:7px;padding:7px;font-size:11px;background:#fff;color:#344967}.desk-update{margin-left:5px;border:0;border-radius:7px;padding:7px 9px;background:#2563eb;color:#fff;font-size:10px;font-weight:700;cursor:pointer}.desk-update:disabled{opacity:.55;cursor:wait}
+.ai-warning{margin-top:12px;padding:10px;border:1px solid #fed7aa;border-radius:8px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.45}
+.role-hero{padding:34px;border-radius:22px;color:#fff;box-shadow:0 18px 38px rgba(37,99,235,.15)}.role-hero h1{font-size:30px;letter-spacing:-.04em;margin:10px 0}.role-hero p{max-width:600px;color:#e7f0ff;line-height:1.7;font-size:13px}.user-role-hero{background:linear-gradient(120deg,#123e73,#2563eb 68%,#209bd0)}.department-role-hero{background:linear-gradient(120deg,#44132f,#74154f 62%,#b52b76)}.role-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.role-stats>div{padding:18px 20px;background:#fff;border:1px solid #e5ebf3;border-radius:14px;box-shadow:0 8px 23px rgba(15,35,65,.05)}.role-stats small{display:block;color:#7d8da2;font-size:10px}.role-stats b{display:block;margin-top:7px;font-size:26px;color:#173252}.quick-card h2{margin-bottom:16px}.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.quick-actions button{display:grid;gap:5px;text-align:left;padding:17px;border:1px solid #e0e9f4;border-radius:12px;background:#fbfdff;color:#173252;cursor:pointer}.quick-actions button:hover{border-color:#8db7f5;background:#f5f9ff;transform:translateY(-2px)}.quick-actions b{font-size:12px}.quick-actions span{font-size:10px;color:#7a8a9e}.officer-note{border-left:4px solid #b52b76}.officer-note h2{margin-bottom:8px}@media(max-width:700px){.role-hero{padding:25px}.role-hero h1{font-size:25px}.role-stats{grid-template-columns:1fr 1fr}.quick-actions{grid-template-columns:1fr}}
+@media(max-width:700px){
+    .content{padding:17px}
+    .hero{padding:27px;border-radius:17px}
+    .hero h1{font-size:27px}
+    .card{padding:18px}
+    .topbar{height:68px}
+    .gov-strip{padding:7px 15px}.gov-links{display:none}.gov-strip em{display:none}.portal-masthead{padding:11px 15px}.portal-identity b{font-size:14px}.portal-identity span,.portal-mark{display:none}
+    .system-status{display:none}
+    .hero-visual{display:none}
+}
+@media(min-width:701px) and (max-width:1050px){
+    .sidebar{width:210px}
+    .main{margin-left:210px}
+    .content{padding:22px}
+    .topbar{padding:0 16px}
+    .hero{padding:30px}
+    .hero-visual{right:22px;top:25px;width:175px}
+    .hero h1{font-size:29px;max-width:55%}
+    .hero p{max-width:58%}
+    .auth-actions .department{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     HTML SECTION
+     ========================================================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <div class="brand-logo">⚖</div>
+        <div>
+            <div class="brand-title">Smart Grievance</div>
+            <span class="brand-sub">PS-52 Innovation Project</span>
+        </div>
+    </div>
+
+    <div class="menu-label">Main Menu</div>
+
+    <nav class="nav">
+
+        <button class="nav-btn active" data-page="dashboard" data-title="Dashboard">
+            <span class="nav-icon">🏠</span> Dashboard
+        </button>
+
+        <button class="nav-btn user-only" id="userDashboardNav" data-page="userDashboard" data-title="User Dashboard" style="display:none">
+            <span class="nav-icon">👤</span> User Dashboard
+        </button>
+
+        <button class="nav-btn" data-page="register" data-title="Register Grievance">
+            <span class="nav-icon">📝</span> Register Grievance
+        </button>
+
+        <button class="nav-btn" data-page="track" data-title="Track Complaint">
+            <span class="nav-icon">🔎</span> Track Complaint
+        </button>
+
+        <button class="nav-btn" data-page="grievances" data-title="My Grievances">
+            <span class="nav-icon">📋</span> My Grievances
+        </button>
+
+        <button class="nav-btn department-only" id="departmentNav" data-page="department" data-title="Department Desk" style="display:none">
+            <span class="nav-icon">🏢</span> Department Desk
+        </button>
+
+        <button class="nav-btn department-only" id="departmentDashboardNav" data-page="departmentDashboard" data-title="Department Dashboard" style="display:none">
+            <span class="nav-icon">📊</span> Department Dashboard
+        </button>
+
+        <button class="nav-btn" data-page="ai" data-title="AI Processing">
+            <span class="nav-icon">🤖</span> AI Processing
+        </button>
+
+        <button class="nav-btn" data-page="about" data-title="About Project">
+            <span class="nav-icon">ℹ️</span> About Project
+        </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+        <b>Hackathon Prototype</b><br>
+        Structured grievance registration, tracking and AI-assisted processing.
+    </div>
+
+</aside>
+
+<main class="main">
+
+    <div class="gov-strip">
+        <div><b>SMART CIVIC NETWORK</b><span>Citizen Services &amp; Public Grievances</span><em>Digital • Transparent • Community-first</em></div>
+        <div class="gov-links"><span>⌂ Home</span><span>☎ Contact</span><span>ⓘ About</span><span>? Help</span></div>
+    </div>
+
+    <div class="portal-masthead">
+        <div class="portal-identity"><div class="portal-emblem">SG</div><div><small>SMART CIVIC SERVICES</small><b>Public Grievance &amp; Resolution Portal</b><span>Transparent • Accessible • Accountable</span></div></div>
+        <div class="portal-mark"><strong>SG</strong><span>Smart Grievance</span></div>
+    </div>
+
+    <nav class="home-nav" aria-label="Primary navigation">
+        <button type="button" data-go="dashboard">Home</button>
+        <button type="button" data-go="register">Register Complaint</button>
+        <button type="button" data-go="track">Track Complaint</button>
+        <button type="button" data-go="grievances">My Grievances</button>
+        <button type="button" data-go="ai">AI Assistance</button>
+        <button type="button" data-go="about">About</button>
+    </nav>
+
+    <header class="topbar">
+
+        <div class="title-area">
+
+            <button class="sidebar-toggle" id="sidebarToggle" type="button" title="Collapse navigation">☰</button>
+            <button class="mobile-menu" id="mobileMenu">☰</button>
+
+            <div>
+                <div class="page-title" id="pageTitle">Dashboard</div>
+                <div class="breadcrumb">Smart Grievance Management / <span id="crumb">Dashboard</span></div>
+            </div>
+
+        </div>
+
+        <div class="auth-actions">
+            <span class="system-status" id="apiStatus"><i></i> Checking API…</span>
+            <button class="auth-btn" id="userLoginBtn" type="button">👤 User Login</button>
+            <button class="auth-btn department" id="departmentLoginBtn" type="button">🏢 Department Login</button>
+        </div>
+
+        <div class="user-box">
+            <div class="avatar">C</div>
+            <div class="user-name">
+                <b id="currentUserName">Citizen</b>
+                <small id="currentUserRole">Public User</small>
+            </div>
+            <button class="logout-btn" id="logoutBtn" type="button" title="Logout">↪</button>
+        </div>
+
+    </header>
+
+    <!-- MARQUEE -->
+    <div class="notice">
+        <strong>📢 NOTICE</strong>
+        <span class="notice-text">Welcome to Smart Grievance Management System — register, track and resolve civic issues through one transparent workflow.</span>
+    </div>
+
+    <div class="content">
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section class="page active" id="dashboard">
+
+            <div class="hero">
+
+                <span class="hero-tag">CITIZEN SERVICES &nbsp;•&nbsp; PS-52 INNOVATION PROJECT</span>
+
+                <h1>Every complaint deserves a clear response.</h1>
+
+                <p>
+                    Register civic issues in a few simple steps, attach a photo,
+                    track progress and connect your complaint to the right department.
+                </p>
+
+                <div class="hero-actions">
+
+                    <button class="btn btn-white" data-go="register">
+                        + Register Grievance
+                    </button>
+
+                    <button class="btn btn-primary" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25)" data-go="track">
+                        Track Complaint →
+                    </button>
+
+                </div>
+
+                <div class="hero-visual" aria-label="Platform highlights">
+                    <div class="hero-visual-ring">◎</div>
+                    <div><b>SMART ROUTING</b><span>AI-assisted department matching</span></div>
+                    <div><b>LIVE TRACKING</b><span>Transparent status updates</span></div>
+                </div>
+
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-label">Total Grievances</div>
+                    <div class="stat-value" id="totalCount">24</div>
+                    <div class="stat-foot">All registered cases</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="pendingCount">08</div>
+                    <div class="stat-foot">Awaiting processing</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-value">10</div>
+                    <div class="stat-foot">Under department action</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">Resolved</div>
+                    <div class="stat-value">06</div>
+                    <div class="stat-foot">Successfully closed</div>
+                </div>
+
+            </div>
+
+            <div class="two-col">
+
+                <div class="card">
+
+                    <h2>🎯 Problem We Are Addressing</h2>
+
+                    <p>
+                        Citizens may face difficulty in submitting complaints
+                        to the correct department, explaining the exact location,
+                        knowing the current status and receiving timely updates.
+                        A structured digital workflow can make this process easier
+                        to monitor.
+                    </p>
+
+                    <div class="feature">
+                        <div class="feature-icon">📍</div>
+                        <div>
+                            <b>Location-based details</b>
+                            <p>Area, pincode, ward and exact location can be captured.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🔎</div>
+                        <div>
+                            <b>Transparent tracking</b>
+                            <p>A unique grievance ID allows citizens to check progress.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <h2>💡 Proposed Solution</h2>
+
+                    <p>
+                        The platform uses a structured form instead of depending
+                        only on a chatbot. AI-assisted processing can later help
+                        classify complaints, analyze priority and route them to
+                        the concerned department.
+                    </p>
+
+                    <div class="feature">
+                        <div class="feature-icon">🤖</div>
+                        <div>
+                            <b>AI-assisted processing</b>
+                            <p>Category and priority analysis can be integrated.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SEPARATE LOGIN PAGES ================= -->
+
+        <section class="page" id="userLoginPage">
+            <div class="login-shell">
+                <div class="login-visual user-login-visual"><div><span class="login-kicker">CITIZEN ACCESS</span><h1>Raise and track your civic concerns.</h1><p>Login to keep your complaint history, follow responses and use the optional AI assistant from one personal workspace.</p></div><div class="login-points"><span>✓ Personal complaint history</span><span>✓ Photo and voice evidence</span><span>✓ Transparent status timeline</span></div></div>
+                <div class="login-card"><button class="login-back" type="button" data-go="dashboard">← Back to public home</button><h2>👤 User Login</h2><p>Sign in to open your citizen dashboard. Login is optional for submitting a complaint.</p><form class="auth-form" id="userLoginPageForm"><div><label for="userPageIdentity">Mobile number or email</label><input id="userPageIdentity" required placeholder="Enter mobile number or email"></div><div><label for="userPagePassword">Password</label><input id="userPagePassword" type="password" required minlength="6" placeholder="Enter password"></div><div class="auth-status" id="userLoginStatus"></div><button class="btn btn-primary" type="submit">Login as User</button></form><button class="btn btn-soft login-register" id="userRegisterFromPage" type="button">New user? Create account</button><small class="login-helper">After login, only the User Dashboard will open. Department tools stay protected.</small></div>
+            </div>
+        </section>
+
+        <section class="page" id="departmentLoginPage">
+            <div class="login-shell">
+                <div class="login-visual department-login-visual"><div><span class="login-kicker">AUTHORISED OFFICER ACCESS</span><h1>Process assigned grievances with clarity.</h1><p>Department officers get a separate workspace for reviewing evidence, updating status and closing citizen complaints.</p></div><div class="login-points"><span>✓ Department-specific cases</span><span>✓ Evidence and location review</span><span>✓ Status updates and feedback</span></div></div>
+                <div class="login-card"><button class="login-back" type="button" data-go="dashboard">← Back to public home</button><h2>🏢 Department Login</h2><p>Use your officer ID, department and password to open the department dashboard.</p><form class="auth-form" id="departmentLoginPageForm"><div><label for="departmentPageIdentity">Officer email or ID</label><input id="departmentPageIdentity" required placeholder="Enter officer ID or email"></div><div><label for="departmentPageName">Department</label><select id="departmentPageName" required><option value="">Select department</option><option>Water Works Department</option><option>Electrical Department</option><option>Sanitation Department</option><option>Public Works Department</option><option>Health Department</option><option>Education Department</option><option>Public Safety Department</option><option>Public Grievance Cell</option></select></div><div><label for="departmentPagePassword">Password</label><input id="departmentPagePassword" type="password" required minlength="6" placeholder="Enter password"></div><div class="auth-status" id="departmentLoginStatus"></div><button class="btn btn-primary" type="submit">Login as Department</button></form><small class="login-helper">After login, only complaints routed to your department will be visible.</small></div>
+            </div>
+        </section>
+
+        <!-- ================= USER DASHBOARD ================= -->
+
+        <section class="page" id="userDashboard">
+            <div class="role-hero user-role-hero"><span class="eyebrow">CITIZEN WORKSPACE</span><h1>Welcome back, <span id="userDashboardName">Citizen</span></h1><p>Manage your complaints, attach evidence and follow every response from one place.</p><div class="hero-actions"><button class="btn btn-primary" data-go="register">+ Register Complaint</button><button class="btn btn-soft" data-go="grievances">View My Grievances</button></div></div>
+            <div class="role-stats"><div><small>Total submitted</small><b id="userDashTotal">0</b></div><div><small>Pending</small><b id="userDashPending">0</b></div><div><small>In progress</small><b id="userDashProgress">0</b></div><div><small>Resolved</small><b id="userDashResolved">0</b></div></div>
+            <div class="card quick-card"><h2>What would you like to do?</h2><div class="quick-actions"><button data-go="register">📝 <b>Register a complaint</b><span>Describe an issue and attach a photo</span></button><button data-go="track">🔎 <b>Track a complaint</b><span>Check the latest status and history</span></button><button data-go="ai">✨ <b>Ask AI Assistant</b><span>Find the right department faster</span></button></div></div>
+        </section>
+
+        <!-- ================= DEPARTMENT DASHBOARD ================= -->
+
+        <section class="page" id="departmentDashboard">
+            <div class="role-hero department-role-hero"><span class="eyebrow">OFFICER WORKSPACE</span><h1>Department Dashboard</h1><p>Review assigned civic issues, prioritize response and keep citizens updated.</p><div class="hero-actions"><button class="btn btn-primary" data-go="department">Open Department Desk</button><button class="btn btn-soft" data-go="about">View workflow</button></div></div>
+            <div class="role-stats"><div><small>Assigned cases</small><b id="deptDashTotal">0</b></div><div><small>Pending review</small><b id="deptDashPending">0</b></div><div><small>In progress</small><b id="deptDashProgress">0</b></div><div><small>Resolved</small><b id="deptDashResolved">0</b></div></div>
+            <div class="card officer-note"><h2>📌 Officer checklist</h2><p>Review the evidence, confirm the location, update the status and add a clear note for the citizen.</p><button class="btn btn-soft" data-go="department">Review assigned complaints →</button></div>
+        </section>
+
+        <!-- ================= REGISTER ================= -->
+
+        <section class="page" id="register">
+
+            <div class="card">
+
+                <h2>📝 Register New Grievance</h2>
+
+                <p style="margin-bottom:20px">
+                    Fill in the details below. A unique grievance ID will be
+                    generated after successful submission.
+                </p>
+
+                <div class="public-access-note"><span>🌐</span><div><b>Login is optional.</b> Anyone can submit a complaint with a name, mobile number and location. Login is only needed to save and view your personal complaint history.</div></div>
+
+                <form id="grievanceForm">
+
+                    <div class="form-grid">
+
+                        <div class="field">
+                            <label>Citizen Name *</label>
+                            <input id="citizenName" required placeholder="Enter full name">
+                        </div>
+
+                        <div class="field">
+                            <label>Mobile Number *</label>
+                            <input id="mobile" required maxlength="10" inputmode="numeric" placeholder="10 digit mobile number">
+                        </div>
+
+                        <div class="field">
+                            <label>Pincode *</label>
+                            <input id="pincode" required maxlength="6" inputmode="numeric" placeholder="Enter pincode">
+                        </div>
+
+                        <div class="field">
+                            <label>Ward Number</label>
+                            <input id="ward" placeholder="Enter ward number">
+                        </div>
+
+                        <div class="field">
+                            <label>Area / Locality *</label>
+                            <input id="area" required placeholder="Example: Neelbad">
+                        </div>
+
+                        <div class="field">
+                            <label>District *</label>
+                            <select id="district" required>
+                                <option value="">Select district</option>
+                                <option>Bhopal</option>
+                                <option>Indore</option>
+                                <option>Jabalpur</option>
+                                <option>Gwalior</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Grievance Category *</label>
+                            <select id="category" required>
+                                <option value="">Select category</option>
+                                <option>Electricity</option>
+                                <option>Water Supply</option>
+                                <option>Road & Transport</option>
+                                <option>Sanitation</option>
+                                <option>Street Light</option>
+                                <option>Healthcare</option>
+                                <option>Education</option>
+                                <option>Public Safety</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Priority</label>
+                            <select id="priority">
+                                <option>Normal</option>
+                                <option>Important</option>
+                                <option>Urgent</option>
+                            </select>
+                        </div>
+
+                        <div class="field full">
+                            <label>Exact Location / Landmark</label>
+                            <input id="location" placeholder="Street, landmark or nearby location">
+                        </div>
+
+                        <div class="field full">
+                            <label>Grievance Description *</label>
+                            <div class="voice-input-wrap">
+                                <textarea id="description" required placeholder="Explain your problem clearly..."></textarea>
+                                <div class="voice-controls">
+                                    <select class="voice-lang" id="descriptionVoiceLang" aria-label="Voice language"><option value="hi-IN">हिंदी</option><option value="en-IN">English (India)</option></select>
+                                    <button class="voice-btn" id="descriptionSpeakBtn" type="button">🎙 Speak</button>
+                                    <span class="voice-status" id="descriptionVoiceStatus">Type or speak your complaint</span>
+                                </div>
+                                <small class="voice-privacy">Microphone permission is required. Only the converted text is added to your complaint.</small>
+                            </div>
+                        </div>
+
+                        <div class="field full">
+                            <label>Problem Photo (optional)</label>
+                            <div class="photo-upload">
+                                <input id="problemPhoto" type="file" accept="image/png,image/jpeg,image/webp">
+                                <small class="photo-help">Upload a clear JPG, PNG or WEBP image (maximum 2 MB).</small>
+                                <div class="photo-preview" id="photoPreview">
+                                    <img id="photoPreviewImage" alt="Selected problem photo preview">
+                                    <span id="photoPreviewName"></span>
+                                    <button class="btn btn-danger" id="removePhoto" type="button">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field full" id="departmentSuggestion" style="display:none">
+                            <label>Suggested Department</label>
+                            <input id="suggestedDepartment" readonly>
+                            <small id="departmentReason" style="color:#718096">Suggestion based on the complaint description. Please review before submitting.</small>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button class="btn btn-soft" id="suggestDepartment" type="button">✨ Suggest category &amp; department</button>
+
+                        <button class="btn btn-primary" type="submit">
+                            Submit Grievance
+                        </button>
+
+                        <button class="btn btn-soft" type="reset">
+                            Clear Form
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= TRACK ================= -->
+
+        <section class="page" id="track">
+
+            <div class="card track-card">
+
+                <h2>🔎 Track Your Grievance</h2>
+
+                <p>
+                    Enter the grievance ID generated after submitting a complaint.
+                </p>
+
+                <div class="track-input">
+
+                    <input id="trackId" placeholder="Example: GRV-2026-101">
+
+                    <button id="trackBtn">Track</button>
+
+                </div>
+
+                <div class="track-result" id="trackResult"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= GRIEVANCES ================= -->
+
+        <section class="page" id="grievances">
+
+            <div class="card">
+
+                <h2>📋 My Grievances</h2>
+
+                <p style="margin-bottom:18px">
+                    Your complaints, current status and department response history.
+                </p>
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Grievance ID</th>
+                                <th>Category</th>
+                                <th>Area</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="grievanceTable">
+
+                            <tr>
+                                <td>GRV-2026-001</td>
+                                <td>Electricity</td>
+                                <td>Bhopal</td>
+                                <td>Urgent</td>
+                                <td><span class="status progress">In Progress</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>GRV-2026-002</td>
+                                <td>Water Supply</td>
+                                <td>Neelbad</td>
+                                <td>Important</td>
+                                <td><span class="status pending">Pending</span></td>
+                            </tr>
+
+                            <tr>
+                                <td>GRV-2026-003</td>
+                                <td>Street Light</td>
+                                <td>Bhopal</td>
+                                <td>Normal</td>
+                                <td><span class="status resolved">Resolved</span></td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= DEPARTMENT DESK ================= -->
+
+        <section class="page" id="department">
+            <div class="card">
+                <div class="desk-heading"><div><span class="eyebrow">OFFICER WORKSPACE</span><h2>🏢 Department Desk</h2><p>Review assigned grievances and keep citizens informed with timely status updates.</p></div><span class="desk-dept" id="deskDepartment">Department</span></div>
+                <div class="desk-stats"><div><small>Assigned cases</small><b id="deskTotal">0</b></div><div><small>Pending review</small><b id="deskPending">0</b></div><div><small>In progress</small><b id="deskProgress">0</b></div><div><small>Resolved</small><b id="deskResolved">0</b></div></div>
+                <div class="table-wrap"><table><thead><tr><th>ID</th><th>Citizen</th><th>Category</th><th>Area</th><th>Priority</th><th>Status</th><th>Feedback</th><th>Action</th></tr></thead><tbody id="departmentTable"><tr><td colspan="8"><p>Department login required.</p></td></tr></tbody></table></div>
+            </div>
+        </section>
+
+
+        <!-- ================= AI ================= -->
+
+        <section class="page" id="ai">
+
+            <div class="card">
+
+                <h2>🤖 AI-Assisted Grievance Processing</h2>
+
+                <p>AI Assistance is optional. Describe your problem in simple language and it will suggest the category, urgency and department. You can review the suggestion before opening the complaint form.</p>
+
+                <div class="ai-route-note">💡 If you already know the department, use <b>Register Complaint</b> directly. Use AI only when you want help choosing the right department.</div>
+
+                <div class="ai-demo">
+                    <div class="ai-input-panel">
+                        <label for="aiComplaint">Describe the complaint</label>
+                        <div class="voice-input-wrap">
+                            <textarea id="aiComplaint" placeholder="Example: There has been no water supply in our area for two days..." maxlength="500"></textarea>
+                            <div class="voice-controls">
+                                <select class="voice-lang" id="aiVoiceLang" aria-label="Voice language"><option value="hi-IN">हिंदी</option><option value="en-IN">English (India)</option></select>
+                                <button class="voice-btn" id="aiSpeakBtn" type="button">🎙 Speak</button>
+                                <span class="voice-status" id="aiVoiceStatus">Type or speak your complaint</span>
+                            </div>
+                            <small class="voice-privacy">Speak naturally; you can edit the transcript before analysis.</small>
+                        </div>
+                        <div class="ai-input-footer">
+                            <span id="aiCharCount">0 / 500</span>
+                            <button class="btn btn-primary" id="analyzeComplaint" type="button">✨ Analyze complaint</button>
+                        </div>
+                        <div class="ai-samples" aria-label="Sample complaints">
+                            <span>Try a sample:</span>
+                            <button type="button" class="ai-chip" data-sample="A major water pipe has burst and water is flooding the street.">Water leak</button>
+                            <button type="button" class="ai-chip" data-sample="The street light near our school has not worked for a week.">Street light</button>
+                            <button type="button" class="ai-chip" data-sample="Garbage has not been collected from our neighborhood for several days.">Garbage</button>
+                        </div>
+                    </div>
+                    <div class="ai-results" id="aiResults" aria-live="polite">
+                        <div class="ai-empty"><span>✨</span><b>Your analysis will appear here</b><p>Enter a complaint above or choose a sample to get started.</p></div>
+                    </div>
+                </div>
+
+                <div class="ai-flow" aria-label="AI processing stages">
+                    <div class="ai-box"><div class="ai-num">1</div><b>Complaint received</b><p>Citizen input</p></div>
+                    <div class="ai-box"><div class="ai-num">2</div><b>Category detected</b><p>AI classification</p></div>
+                    <div class="ai-box"><div class="ai-num">3</div><b>Urgency assessed</b><p>Priority suggestion</p></div>
+                    <div class="ai-box"><div class="ai-num">4</div><b>Department matched</b><p>Suggested routing</p></div>
+                    <div class="ai-box"><div class="ai-num">5</div><b>Ready to track</b><p>Clear next steps</p></div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ABOUT ================= -->
+
+        <section class="page" id="about">
+            <div class="about-hero">
+                <div class="about-orbit about-orbit-one"></div><div class="about-orbit about-orbit-two"></div>
+                <div class="about-hero-content">
+                    <span class="about-eyebrow">PS-52 · SISTec Innovation Hackathon</span>
+                    <h2>A clearer path from<br><span>voice to resolution.</span></h2>
+                    <p>Smart Grievance Management helps citizens raise local issues, follow progress and stay informed at every step.</p>
+                    <div class="about-tags"><span>⚖️ Citizen-first</span><span>🔎 Transparent tracking</span><span>✨ AI-assisted</span></div>
+                </div>
+                <div class="about-hero-mark" aria-hidden="true"><div class="about-mark-icon">⚖</div><div class="about-mark-ring"></div><span>SMART<br>GRIEVANCE</span></div>
+            </div>
+
+            <div class="about-intro-grid">
+                <article class="about-info-card">
+                    <span class="about-card-icon">🎯</span><div class="about-kicker">THE PURPOSE</div>
+                    <h3>Make every concern count</h3>
+                    <p>Give residents one structured place to register a grievance, share useful location details and receive a unique ID to track what happens next.</p>
+                </article>
+                <article class="about-info-card">
+                    <span class="about-card-icon">💡</span><div class="about-kicker">WHAT’S DIFFERENT</div>
+                    <h3>Built for clarity and action</h3>
+                    <p>Organized forms, priority handling and AI-assisted suggestions help make complaints easier to understand and route to the right team.</p>
+                </article>
+                <article class="about-info-card about-fact-card">
+                    <div class="about-kicker">PROJECT SNAPSHOT</div>
+                    <div class="about-fact"><b>PS-52</b><span>Problem statement</span></div>
+                    <div class="about-fact"><b>End-to-end</b><span>Register · route · track</span></div>
+                    <div class="about-fact"><b>Prototype</b><span>Academic & hackathon demo</span></div>
+                </article>
+            </div>
+
+            <div class="about-roadmap card">
+                <div class="about-roadmap-heading"><div><div class="about-kicker">WHERE IT CAN GO NEXT</div><h2>From prototype to public service</h2></div><span class="about-rocket">🚀</span></div>
+                <div class="about-roadmap-grid">
+                    <div class="about-roadmap-item"><span>🔐</span><div><b>Secure citizen accounts</b><small>Protect identity and complaint history</small></div></div>
+                    <div class="about-roadmap-item"><span>🏢</span><div><b>Department integration</b><small>Connect complaints to service teams</small></div></div>
+                    <div class="about-roadmap-item"><span>🧠</span><div><b>Smarter AI assistance</b><small>Improve classification and routing</small></div></div>
+                    <div class="about-roadmap-item"><span>📍</span><div><b>Location-aware reports</b><small>Map issues and spot local patterns</small></div></div>
+                    <div class="about-roadmap-item"><span>🔔</span><div><b>Timely notifications</b><small>Send status updates by SMS or email</small></div></div>
+                    <div class="about-roadmap-item"><span>📊</span><div><b>Service insights</b><small>Help teams monitor and improve response</small></div></div>
+                </div>
+            </div>
+            <div class="about-note">A demonstration prototype exploring a more accessible and transparent grievance experience.</div>
+        </section>
+
+    </div>
+
+    <footer>
+        Smart Grievance Management • PS-52 • SISTec Innovation Hackathon
+        <br>
+        Academic & Hackathon Demonstration Prototype
+    </footer>
+
+</main>
+
+<!-- Login and account creation interface. Authentication is handled by the local backend API. -->
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="auth-panel">
+        <button class="auth-close" id="authClose" type="button" aria-label="Close">×</button>
+        <h2 id="authTitle">Welcome back</h2>
+        <p id="authSubtitle">Login to manage your grievances and updates.</p>
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-auth-tab="user" type="button">User Login</button>
+            <button class="auth-tab" data-auth-tab="department" type="button">Department Login</button>
+        </div>
+        <form class="auth-form" id="authForm">
+            <div id="authNameField" style="display:none"><label for="authName">Full name</label><input id="authName" placeholder="Enter your full name"></div>
+            <div><label id="authIdLabel" for="authId">Mobile number or email</label><input id="authId" required placeholder="Enter mobile number or email"></div>
+            <div id="departmentField" style="display:none"><label for="authDepartment">Department</label><select id="authDepartment"><option value="">Select department</option><option>Water Works Department</option><option>Electrical Department</option><option>Sanitation Department</option><option>Public Works Department</option><option>Health Department</option><option>Public Grievance Cell</option></select></div>
+            <div><label for="authPassword">Password</label><input id="authPassword" type="password" required minlength="6" placeholder="Enter password (6+ characters)"></div>
+            <div class="auth-status" id="authStatus"></div>
+            <button class="btn btn-primary" type="submit" id="authSubmit">Login as User</button>
+            <button class="btn btn-soft" type="button" id="authRegisterToggle">New user? Create account</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT SECTION
+     ========================================================= -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const API_BASE = (new URLSearchParams(location.search).get("api") || window.SMART_GRIEVANCE_API_BASE || "http://localhost:5000/api").replace(/\/$/, "");
+
+    async function checkApiStatus(){
+        const indicator = document.getElementById("apiStatus");
+        try {
+            const response = await fetch(`${API_BASE}/grievances`, { cache:"no-store" });
+            if(!response.ok) throw new Error("API unavailable");
+            indicator.innerHTML = "<i></i> API Online";
+            indicator.classList.remove("offline");
+        } catch(_) {
+            indicator.innerHTML = "<i></i> API Offline";
+            indicator.classList.add("offline");
+        }
+    }
+    checkApiStatus();
+    setInterval(checkApiStatus, 30000);
+
+    /* ---------- BASIC ELEMENTS ---------- */
+
+    const pages = document.querySelectorAll(".page");
+    const navButtons = document.querySelectorAll(".nav-btn");
+    const pageTitle = document.getElementById("pageTitle");
+    const crumb = document.getElementById("crumb");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    document.body.classList.add("home-simple");
+    // Keep the first desktop view clean and spacious; the user can expand the sidebar with ☰.
+    if(window.innerWidth > 1100 && localStorage.getItem("smartGrievanceSidebarCollapsed") !== "false") document.body.classList.add("sidebar-collapsed");
+    sidebarToggle.addEventListener("click", function(){
+        if(document.body.classList.contains("home-simple")){
+            document.body.classList.remove("home-simple", "sidebar-collapsed");
+            localStorage.setItem("smartGrievanceSidebarCollapsed", "false");
+            return;
+        }
+        document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem("smartGrievanceSidebarCollapsed", document.body.classList.contains("sidebar-collapsed"));
+    });
+
+    /* ---------- FRONTEND LOGIN INTERFACE ---------- */
+    const authModal = document.getElementById("authModal");
+    const authForm = document.getElementById("authForm");
+    const authStatus = document.getElementById("authStatus");
+    let authMode = "user";
+    let authAction = "login";
+    function setRoleNavigation(role){
+        const isDepartment = role === "department";
+        document.getElementById("departmentNav").style.display = isDepartment ? "flex" : "none";
+        document.getElementById("departmentDashboardNav").style.display = isDepartment ? "flex" : "none";
+        document.getElementById("userDashboardNav").style.display = role === "user" ? "flex" : "none";
+    }
+
+    function openAuth(mode, action = "login"){
+        authMode = mode || "user";
+        authAction = action;
+        document.querySelectorAll(".auth-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.authTab === authMode));
+        document.querySelector(".auth-tabs").style.display = authAction === "register" ? "none" : "grid";
+        document.getElementById("departmentField").style.display = authMode === "department" ? "block" : "none";
+        document.getElementById("authNameField").style.display = authAction === "register" ? "block" : "none";
+        document.getElementById("authName").required = authAction === "register";
+        document.getElementById("authIdLabel").textContent = authMode === "department" ? "Officer email or ID" : "Mobile number or email";
+        document.getElementById("authId").placeholder = authMode === "department" ? "Enter officer ID or email" : "Enter mobile number or email";
+        document.getElementById("authSubmit").textContent = authAction === "register" ? "Create User Account" : (authMode === "department" ? "Login as Department" : "Login as User");
+        document.getElementById("authRegisterToggle").style.display = authMode === "user" && authAction === "login" ? "block" : "none";
+        document.getElementById("authTitle").textContent = authAction === "register" ? "Create your account" : (authMode === "department" ? "Department access" : "Welcome back");
+        document.getElementById("authSubtitle").textContent = authAction === "register" ? "Create an account to save and track your grievances." : (authMode === "department" ? "Sign in to review and process assigned grievances." : "Login to manage your grievances and updates.");
+        authStatus.textContent = "";
+        authStatus.className = "auth-status";
+        authModal.classList.add("open");
+        document.getElementById(authAction === "register" ? "authName" : "authId").focus();
+    }
+
+    async function readAuthResponse(response){
+        const body = await response.text();
+        try { return body ? JSON.parse(body) : {}; }
+        catch(_) { throw new Error(`Backend returned an invalid response (HTTP ${response.status}). Restart server.js and try again.`); }
+    }
+
+    function openLoginPage(mode){
+        const pageId = mode === "department" ? "departmentLoginPage" : "userLoginPage";
+        const title = mode === "department" ? "Department Login" : "User Login";
+        openPage(pageId, title);
+        setTimeout(() => document.getElementById(mode === "department" ? "departmentPageIdentity" : "userPageIdentity").focus(), 0);
+    }
+
+    async function loginWithCredentials(mode, identity, password, department, statusElement){
+        statusElement.textContent = "Connecting to backend…";
+        statusElement.className = "auth-status";
+        try {
+            const response = await fetch(API_BASE + "/auth/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ identity, password, role:mode, department }) });
+            const result = await readAuthResponse(response);
+            if(!response.ok) throw new Error(result.error || "Login failed.");
+            const user = result.user;
+            localStorage.setItem("smartGrievanceSession", JSON.stringify({ token:result.token, ...user, loggedInAt:new Date().toISOString() }));
+            const displayName = user.department || user.name || user.identity;
+            document.getElementById("currentUserName").textContent = displayName.length > 18 ? displayName.slice(0,18) + "…" : displayName;
+            document.getElementById("currentUserRole").textContent = user.role === "department" ? "Department Officer" : "Registered User";
+            document.getElementById("logoutBtn").style.display = "inline-flex";
+            setRoleNavigation(user.role);
+            document.getElementById(user.role === "department" ? "deskDepartment" : "userDashboardName").textContent = user.department || user.name || "Citizen";
+            openPage(user.role === "department" ? "departmentDashboard" : "userDashboard", user.role === "department" ? "Department Dashboard" : "User Dashboard");
+            statusElement.textContent = "Login successful.";
+            statusElement.className = "auth-status success";
+        } catch(error) {
+            statusElement.textContent = error.message + " Start backend at http://localhost:5000.";
+        }
+    }
+
+    document.getElementById("userLoginBtn").addEventListener("click", () => openLoginPage("user"));
+    document.getElementById("departmentLoginBtn").addEventListener("click", () => openLoginPage("department"));
+    document.getElementById("userRegisterFromPage").addEventListener("click", () => openAuth("user", "register"));
+    document.getElementById("userLoginPageForm").addEventListener("submit", function(event){
+        event.preventDefault();
+        loginWithCredentials("user", document.getElementById("userPageIdentity").value.trim(), document.getElementById("userPagePassword").value, "", document.getElementById("userLoginStatus"));
+    });
+    document.getElementById("departmentLoginPageForm").addEventListener("submit", function(event){
+        event.preventDefault();
+        const department = document.getElementById("departmentPageName").value;
+        if(!department){ document.getElementById("departmentLoginStatus").textContent = "Please select your department."; return; }
+        loginWithCredentials("department", document.getElementById("departmentPageIdentity").value.trim(), document.getElementById("departmentPagePassword").value, department, document.getElementById("departmentLoginStatus"));
+    });
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("smartGrievanceSession");
+        document.getElementById("currentUserName").textContent = "Citizen";
+        document.getElementById("currentUserRole").textContent = "Public User";
+        document.getElementById("logoutBtn").style.display = "none";
+        setRoleNavigation("");
+        openPage("dashboard", "Dashboard");
+        authStatus.textContent = "You have been logged out.";
+    });
+    document.getElementById("authClose").addEventListener("click", () => authModal.classList.remove("open"));
+    authModal.addEventListener("click", event => { if(event.target === authModal) authModal.classList.remove("open"); });
+    document.querySelectorAll(".auth-tab").forEach(tab => tab.addEventListener("click", () => openAuth(tab.dataset.authTab, "login")));
+    document.getElementById("authRegisterToggle").addEventListener("click", () => openAuth("user", "register"));
+    authForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const name = document.getElementById("authName").value.trim();
+        const identity = document.getElementById("authId").value.trim();
+        const password = document.getElementById("authPassword").value;
+        const department = document.getElementById("authDepartment").value;
+        if(authMode === "department" && !department){ authStatus.textContent = "Please select your department."; return; }
+        authStatus.textContent = "Connecting to backend…";
+        try {
+            let response;
+            if(authAction === "register"){
+                response = await fetch(`${API_BASE}/auth/register`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ name, identity, password }) });
+                const result = await readAuthResponse(response);
+                if(!response.ok) throw new Error(result.error || "Account could not be created.");
+                authAction = "login";
+            }
+            response = await fetch(`${API_BASE}/auth/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ identity, password, role:authMode, department }) });
+            const result = await readAuthResponse(response);
+            if(!response.ok) throw new Error(result.error || "Login failed.");
+            const user = result.user;
+            localStorage.setItem("smartGrievanceSession", JSON.stringify({ token:result.token, ...user, loggedInAt:new Date().toISOString() }));
+            const displayName = user.department || user.name || user.identity;
+            document.getElementById("currentUserName").textContent = displayName.length > 18 ? displayName.slice(0,18) + "…" : displayName;
+            document.getElementById("currentUserRole").textContent = user.role === "department" ? "Department Officer" : "Registered User";
+            document.getElementById("logoutBtn").style.display = "inline-flex";
+            setRoleNavigation(user.role);
+            document.getElementById(user.role === "department" ? "deskDepartment" : "userDashboardName").textContent = user.department || user.name || "Citizen";
+            openPage(user.role === "department" ? "departmentDashboard" : "userDashboard", user.role === "department" ? "Department Dashboard" : "User Dashboard");
+            authStatus.textContent = "Login successful.";
+            authStatus.className = "auth-status success";
+            setTimeout(() => authModal.classList.remove("open"), 450);
+        } catch(error) {
+            authStatus.textContent = `${error.message} Start backend at http://localhost:5000.`;
+        }
+    });
+    try {
+        const session = JSON.parse(localStorage.getItem("smartGrievanceSession") || "null");
+        if(session){ document.getElementById("currentUserName").textContent = (session.department || session.name || session.identity || "Citizen").slice(0,18); document.getElementById("currentUserRole").textContent = session.role === "department" ? "Department Officer" : (session.role === "user" ? "Registered User" : "Public User"); document.getElementById("logoutBtn").style.display = "inline-flex"; setRoleNavigation(session.role); document.getElementById(session.role === "department" ? "deskDepartment" : "userDashboardName").textContent = session.department || session.name || "Citizen"; setTimeout(() => openPage(session.role === "department" ? "departmentDashboard" : "userDashboard", session.role === "department" ? "Department Dashboard" : "User Dashboard"), 0); }
+    } catch(_){ /* Ignore invalid demo session data. */ }
+
+    /* ---------- PHOTO PREVIEW ---------- */
+    const problemPhoto = document.getElementById("problemPhoto");
+    const photoPreview = document.getElementById("photoPreview");
+    const photoPreviewImage = document.getElementById("photoPreviewImage");
+    const photoPreviewName = document.getElementById("photoPreviewName");
+    let selectedPhotoData = "";
+    problemPhoto.addEventListener("change", function(){
+        const file = this.files && this.files[0];
+        if(!file) return;
+        if(file.size > 2 * 1024 * 1024){ alert("Photo must be smaller than 2 MB."); this.value = ""; return; }
+        if(!file.type.startsWith("image/")){ alert("Please choose an image file."); this.value = ""; return; }
+        const reader = new FileReader();
+        reader.onload = event => {
+            const image = new Image();
+            image.onload = () => {
+                const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight));
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+                canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+                canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+                selectedPhotoData = canvas.toDataURL("image/jpeg", .78);
+                photoPreviewImage.src = selectedPhotoData; photoPreviewName.textContent = file.name; photoPreview.style.display = "flex";
+            };
+            image.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+    document.getElementById("removePhoto").addEventListener("click", () => { problemPhoto.value = ""; selectedPhotoData = ""; photoPreviewImage.removeAttribute("src"); photoPreview.style.display = "none"; });
+    document.getElementById("grievanceForm").addEventListener("reset", () => { selectedPhotoData = ""; photoPreview.style.display = "none"; photoPreviewImage.removeAttribute("src"); });
+
+
+    /* ---------- VOICE INPUT ---------- */
+    function setupVoiceInput(buttonId, textareaId, languageId, statusId){
+        const button = document.getElementById(buttonId);
+        const textarea = document.getElementById(textareaId);
+        const language = document.getElementById(languageId);
+        const status = document.getElementById(statusId);
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!button || !textarea || !language || !status) return;
+        if(!Recognition){
+            button.disabled = true;
+            status.textContent = "Voice input is unavailable in this browser; type instead.";
+            return;
+        }
+        const recognition = new Recognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        let listening = false;
+        let startingText = "";
+        recognition.onstart = function(){
+            listening = true;
+            button.classList.add("listening");
+            button.textContent = "⏹ Stop listening";
+            status.textContent = "Listening… speak clearly";
+        };
+        recognition.onresult = function(event){
+            const spoken = Array.from(event.results).map(item => item[0].transcript).join(" ").trim();
+            textarea.value = [startingText, spoken].filter(Boolean).join(" ").slice(0, textarea.maxLength || 5000);
+            textarea.dispatchEvent(new Event("input", { bubbles:true }));
+        };
+        recognition.onerror = function(event){
+            const message = event.error === "not-allowed" ? "Microphone permission was denied." : "Could not hear that. Please try again.";
+            status.textContent = message;
+        };
+        recognition.onend = function(){
+            listening = false;
+            button.classList.remove("listening");
+            button.textContent = "🎙 Speak";
+            if(status.textContent === "Listening… speak clearly") status.textContent = "Voice captured; review the text before continuing.";
+        };
+        button.addEventListener("click", function(){
+            if(listening){ recognition.stop(); return; }
+            startingText = textarea.value.trim();
+            recognition.lang = language.value;
+            try { recognition.start(); }
+            catch(_) { status.textContent = "Voice input is already active. Try again in a moment."; }
+        });
+    }
+    setupVoiceInput("descriptionSpeakBtn", "description", "descriptionVoiceLang", "descriptionVoiceStatus");
+    setupVoiceInput("aiSpeakBtn", "aiComplaint", "aiVoiceLang", "aiVoiceStatus");
+
+    /* ---------- PAGE NAVIGATION ---------- */
+
+    function openPage(pageId, title){
+
+        pages.forEach(function(page){
+            page.classList.remove("active");
+        });
+
+        const target = document.getElementById(pageId);
+
+        if(!target){
+            return;
+        }
+
+        target.classList.add("active");
+        document.body.classList.toggle("home-simple", pageId === "dashboard");
+        document.body.classList.toggle("login-page", pageId === "userLoginPage" || pageId === "departmentLoginPage");
+
+        pageTitle.textContent = title;
+        crumb.textContent = title;
+
+        navButtons.forEach(function(button){
+            button.classList.remove("active");
+
+            if(button.dataset.page === pageId){
+                button.classList.add("active");
+            }
+        });
+
+        sidebar.classList.remove("open");
+
+        window.scrollTo({
+            top:0,
+            behavior:"smooth"
+        });
+
+        if(pageId === "grievances") loadMyGrievances();
+        if(pageId === "department") loadDepartmentDesk();
+        if(pageId === "userDashboard") loadUserDashboardStats();
+        if(pageId === "departmentDashboard") loadDepartmentDashboardStats();
+    }
+
+
+    /* ---------- SIDEBAR CLICK ---------- */
+
+    navButtons.forEach(function(button){
+
+        button.addEventListener("click", function(){
+
+            openPage(
+                this.dataset.page,
+                this.dataset.title
+            );
+
+        });
+
+    });
+
+
+    /* ---------- HERO BUTTONS ---------- */
+
+    document.querySelectorAll("[data-go]").forEach(function(button){
+
+        button.addEventListener("click", function(){
+
+            const pageId = this.dataset.go;
+
+            const targetButton =
+                document.querySelector(
+                    '.nav-btn[data-page="' + pageId + '"]'
+                );
+
+            openPage(
+                pageId,
+                targetButton ? targetButton.dataset.title : pageId
+            );
+
+        });
+
+    });
+
+
+    /* ---------- MOBILE MENU ---------- */
+
+    document
+        .getElementById("mobileMenu")
+        .addEventListener("click", function(){
+
+            sidebar.classList.toggle("open");
+
+        });
+
+
+    /* ---------- DASHBOARD COUNTS ---------- */
+
+    async function updateCounts(){
+        try {
+            const response = await fetch(`${API_BASE}/grievances`);
+            if (!response.ok) throw new Error("Dashboard data could not be loaded.");
+            const data = await response.json();
+            document.getElementById("totalCount").textContent = data.total;
+            document.getElementById("pendingCount").textContent = String(data.counts.pending).padStart(2, "0");
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+    /* ---------- ADD TABLE ROW ---------- */
+
+    function addTableRow(data){
+
+        const table =
+            document.getElementById("grievanceTable");
+
+        const row =
+            document.createElement("tr");
+
+        const statusClass = data.status === "Resolved"
+            ? "resolved"
+            : data.status === "In Progress" ? "progress" : "pending";
+
+        row.innerHTML = `
+            <td>${escapeHTML(data.id)}</td>
+            <td>${escapeHTML(data.category)}</td>
+            <td>${escapeHTML(data.area)}</td>
+            <td>${escapeHTML(data.priority)}</td>
+            <td>
+                <span class="status ${statusClass}">
+                    ${escapeHTML(data.status)}
+                </span>
+            </td>
+        `;
+
+        table.appendChild(row);
+
+    }
+
+    function currentSession(){
+        try { return JSON.parse(localStorage.getItem("smartGrievanceSession") || "null"); }
+        catch(_) { return null; }
+    }
+
+    async function loadMyGrievances(){
+        const table = document.getElementById("grievanceTable");
+        const session = currentSession();
+        if(!session?.token){ table.innerHTML = "<tr><td colspan='5'><p>Please login as a user to view your grievances.</p></td></tr>"; return; }
+        table.innerHTML = "<tr><td colspan='5'><p>Loading your grievances…</p></td></tr>";
+        try {
+            const response = await fetch(`${API_BASE}/me/grievances`, { headers:{ Authorization:`Bearer ${session.token}` } });
+            const data = await response.json();
+            if(!response.ok) throw new Error(data.error || "Could not load your grievances.");
+            table.innerHTML = "";
+            if(!data.grievances.length){ table.innerHTML = "<tr><td colspan='5'><p>No grievances submitted from this account yet.</p></td></tr>"; return; }
+            data.grievances.forEach(addTableRow);
+        } catch(error) { table.innerHTML = `<tr><td colspan='5'><p style='color:#dc2626'>${escapeHTML(error.message)}</p></td></tr>`; }
+    }
+
+    async function loadDepartmentDesk(){
+        const table = document.getElementById("departmentTable");
+        const session = currentSession();
+        if(!session?.token || session.role !== "department"){ table.innerHTML = "<tr><td colspan='8'><p>Department login required to open this workspace.</p></td></tr>"; return; }
+        document.getElementById("deskDepartment").textContent = session.department || "Department";
+        table.innerHTML = "<tr><td colspan='8'><p>Loading assigned cases…</p></td></tr>";
+        try {
+            const response = await fetch(`${API_BASE}/department/grievances`, { headers:{ Authorization:`Bearer ${session.token}` } });
+            const data = await response.json();
+            if(!response.ok) throw new Error(data.error || "Could not load department cases.");
+            const items = data.grievances || [];
+            document.getElementById("deskTotal").textContent = items.length;
+            document.getElementById("deskPending").textContent = items.filter(item => item.status === "Pending").length;
+            document.getElementById("deskProgress").textContent = items.filter(item => item.status === "In Progress").length;
+            document.getElementById("deskResolved").textContent = items.filter(item => item.status === "Resolved").length;
+            table.innerHTML = "";
+            if(!items.length){ table.innerHTML = "<tr><td colspan='8'><p>No cases are assigned to this department yet.</p></td></tr>"; return; }
+            items.forEach(item => {
+                const statusClass = item.status === "Resolved" ? "resolved" : item.status === "In Progress" ? "progress" : "pending";
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${escapeHTML(item.id)}</td><td>${escapeHTML(item.name)}</td><td>${escapeHTML(item.category)}</td><td>${escapeHTML(item.area)}</td><td>${escapeHTML(item.priority)}</td><td><span class="status ${statusClass}">${escapeHTML(item.status)}</span></td><td>${item.feedback ? `<span class="feedback-stars" title="${item.feedback.rating}/5">${"★".repeat(item.feedback.rating)}${"☆".repeat(5 - item.feedback.rating)}</span>` : `<small style="color:#94a3b8">Awaiting</small>`}</td><td><select class="desk-status" data-status-id="${escapeHTML(item.id)}"><option ${item.status === "Pending" ? "selected" : ""}>Pending</option><option ${item.status === "In Progress" ? "selected" : ""}>In Progress</option><option ${item.status === "Resolved" ? "selected" : ""}>Resolved</option></select><button class="desk-update" data-update-id="${escapeHTML(item.id)}">Update</button></td>`;
+                table.appendChild(row);
+            });
+            document.querySelectorAll("[data-update-id]").forEach(button => button.addEventListener("click", async function(){
+                const id = this.dataset.updateId;
+                const status = document.querySelector(`[data-status-id="${CSS.escape(id)}"]`).value;
+                this.disabled = true;
+                try {
+                    const response = await fetch(`${API_BASE}/grievances/${encodeURIComponent(id)}/status`, { method:"PATCH", headers:{"Content-Type":"application/json", Authorization:`Bearer ${session.token}`}, body:JSON.stringify({status}) });
+                    const result = await response.json();
+                    if(!response.ok) throw new Error(result.error || "Status update failed.");
+                    loadDepartmentDesk();
+                } catch(error) { alert(error.message); this.disabled = false; }
+            }));
+        } catch(error) { table.innerHTML = `<tr><td colspan='8'><p style='color:#dc2626'>${escapeHTML(error.message)}</p></td></tr>`; }
+    }
+
+    function setRoleStats(prefix, items){
+        document.getElementById(`${prefix}Total`).textContent = items.length;
+        document.getElementById(`${prefix}Pending`).textContent = items.filter(item => item.status === "Pending").length;
+        document.getElementById(`${prefix}Progress`).textContent = items.filter(item => item.status === "In Progress").length;
+        document.getElementById(`${prefix}Resolved`).textContent = items.filter(item => item.status === "Resolved").length;
+    }
+
+    async function loadUserDashboardStats(){
+        const session = currentSession();
+        if(!session?.token || session.role !== "user") return;
+        document.getElementById("userDashboardName").textContent = session.name || "Citizen";
+        try {
+            const response = await fetch(`${API_BASE}/me/grievances`, { headers:{ Authorization:`Bearer ${session.token}` } });
+            const data = await response.json();
+            if(response.ok) setRoleStats("userDash", data.grievances || []);
+        } catch(error) { console.error(error); }
+    }
+
+    async function loadDepartmentDashboardStats(){
+        const session = currentSession();
+        if(!session?.token || session.role !== "department") return;
+        try {
+            const response = await fetch(`${API_BASE}/department/grievances`, { headers:{ Authorization:`Bearer ${session.token}` } });
+            const data = await response.json();
+            if(response.ok){ document.getElementById("deptDashTotal").textContent = data.total || 0; setRoleStats("deptDash", data.grievances || []); }
+        } catch(error) { console.error(error); }
+    }
+
+
+    /* ---------- ESCAPE USER INPUT ---------- */
+
+    function escapeHTML(value){
+
+        return String(value)
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+
+    }
+
+    // Prototype keyword rules: suggest a responsible department from the description.
+    function classifyComplaint(text){
+        const lower = text.toLowerCase();
+        if (/water|pipe|leak|drain|sewage|supply/.test(lower)) {
+            return { category: "Water Supply", department: "Water Works Department" };
+        }
+        if (/street.?light|lamp|electric|power|wire/.test(lower)) {
+            return { category: "Street Light", department: "Electrical Department" };
+        }
+        if (/garbage|waste|rubbish|sanitation|dump|clean/.test(lower)) {
+            return { category: "Sanitation", department: "Sanitation Department" };
+        }
+        if (/road|pothole|traffic|footpath/.test(lower)) {
+            return { category: "Road & Transport", department: "Public Works Department" };
+        }
+        if (/hospital|health|medicine|doctor|clinic/.test(lower)) {
+            return { category: "Healthcare", department: "Health Department" };
+        }
+        if (/school|teacher|education|classroom/.test(lower)) {
+            return { category: "Education", department: "Education Department" };
+        }
+        if (/crime|theft|violence|unsafe|safety|police/.test(lower)) {
+            return { category: "Public Safety", department: "Public Safety Department" };
+        }
+        return { category: "Other", department: "Public Grievance Cell" };
+    }
+
+    document.getElementById("suggestDepartment").addEventListener("click", function(){
+        const description = document.getElementById("description").value.trim();
+        if (!description) {
+            alert("Pehle complaint ka description likhiye.");
+            document.getElementById("description").focus();
+            return;
+        }
+        const suggestion = classifyComplaint(description);
+        document.getElementById("category").value = suggestion.category;
+        document.getElementById("suggestedDepartment").value = suggestion.department;
+        document.getElementById("departmentSuggestion").style.display = "flex";
+        if (/urgent|emergency|danger|burst|flood|fire|injur|accident|exposed wire/.test(description.toLowerCase())) {
+            document.getElementById("priority").value = "Urgent";
+        }
+    });
+
+
+    /* ---------- REGISTER FORM ---------- */
+
+    document
+        .getElementById("grievanceForm")
+        .addEventListener("submit", async function(event){
+
+            event.preventDefault();
+
+            const mobile =
+                document.getElementById("mobile").value.trim();
+
+            const pincode =
+                document.getElementById("pincode").value.trim();
+
+
+            if(!/^[0-9]{10}$/.test(mobile)){
+
+                alert(
+                    "Please enter a valid 10 digit mobile number."
+                );
+
+                return;
+            }
+
+
+            if(!/^[0-9]{6}$/.test(pincode)){
+
+                alert(
+                    "Please enter a valid 6 digit pincode."
+                );
+
+                return;
+            }
+
+
+            const grievance = {
+                name:
+                    document.getElementById("citizenName").value.trim(),
+
+                mobile:mobile,
+
+                pincode:pincode,
+
+                ward:
+                    document.getElementById("ward").value.trim(),
+
+                area:
+                    document.getElementById("area").value.trim(),
+
+                district:
+                    document.getElementById("district").value,
+
+                category:
+                    document.getElementById("category").value,
+
+                department:
+                    document.getElementById("suggestedDepartment").value || classifyComplaint(document.getElementById("description").value).department,
+
+                priority:
+                    document.getElementById("priority").value,
+
+                location:
+                    document.getElementById("location").value.trim(),
+
+                description:
+                    document.getElementById("description").value.trim(),
+
+                // Optional image as a data URL. The existing JSON API can ignore this
+                // field until the backend is configured to store attachments.
+                photo: selectedPhotoData || "",
+                photoName: document.getElementById("problemPhoto").files?.[0]?.name || ""
+            };
+
+            let saved;
+            try {
+                const session = JSON.parse(localStorage.getItem("smartGrievanceSession") || "null");
+                const response = await fetch(`${API_BASE}/grievances`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}) },
+                    body: JSON.stringify(grievance)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Complaint could not be submitted.");
+                saved = data.grievance;
+            } catch (error) {
+                alert(`${error.message}\n\nCheck that the backend is running at http://localhost:5000.`);
+                return;
+            }
+
+            await updateCounts();
+
+
+            alert(
+                "Grievance submitted successfully!\n\n" +
+                "Your Grievance ID: " +
+                saved.id +
+                "\n\nPlease save this ID for tracking."
+            );
+
+
+            document
+                .getElementById("grievanceForm")
+                .reset();
+
+            selectedPhotoData = "";
+            photoPreview.style.display = "none";
+            photoPreviewImage.removeAttribute("src");
+
+
+            document
+                .getElementById("trackId")
+                .value = saved.id;
+
+
+            openPage(
+                "track",
+                "Track Complaint"
+            );
+
+
+            showTrackingResult(saved);
+
+        });
+
+
+    /* ---------- TRACK BUTTON ---------- */
+
+    document
+        .getElementById("trackBtn")
+        .addEventListener("click", function(){
+
+            trackComplaint();
+
+        });
+
+
+    /* ---------- ENTER KEY TRACKING ---------- */
+
+    document
+        .getElementById("trackId")
+        .addEventListener("keydown", function(event){
+
+            if(event.key === "Enter"){
+
+                event.preventDefault();
+
+                trackComplaint();
+
+            }
+
+        });
+
+
+    /* ---------- TRACK FUNCTION ---------- */
+
+    async function trackComplaint(){
+
+        const id =
+            document
+                .getElementById("trackId")
+                .value
+                .trim();
+
+        const result =
+            document.getElementById("trackResult");
+
+
+        if(!id){
+
+            result.innerHTML =
+                "<p style='color:#dc2626'>" +
+                "Please enter a grievance ID." +
+                "</p>";
+
+            return;
+        }
+
+
+        result.innerHTML = "<p>Looking up your grievance…</p>";
+        try {
+            const response = await fetch(`${API_BASE}/grievances/${encodeURIComponent(id)}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Grievance not found.");
+            showTrackingResult(data);
+        } catch (error) {
+            result.innerHTML = `<div class="card" style="margin-top:15px"><p style="color:#dc2626">${escapeHTML(error.message)}</p></div>`;
+        }
+
+    }
+
+
+    /* ---------- TRACK RESULT ---------- */
+
+    function showTrackingResult(data){
+        let statusClass = "pending";
+        if(data.status === "In Progress") statusClass = "progress";
+        if(data.status === "Resolved") statusClass = "resolved";
+        const feedback = data.feedback;
+        let feedbackHtml = "";
+        if(data.status === "Resolved"){
+            if(feedback){
+                const stars = Array.from({length:5}, (_, index) => index < Number(feedback.rating) ? "★" : "☆").join("");
+                feedbackHtml = `<div class="feedback-card submitted"><div class="feedback-head"><h4>✅ Citizen feedback</h4><span class="feedback-stars">${stars}</span></div><p>${escapeHTML(feedback.comment || "Thank you for sharing your experience.")}</p></div>`;
+            } else {
+                feedbackHtml = `<div class="feedback-card"><div class="feedback-head"><h4>How was the resolution?</h4><span>⭐</span></div><p>Now that this complaint is resolved, share a quick rating to help improve civic services.</p><form class="feedback-form" id="feedbackForm"><label for="feedbackRating">Your rating</label><select id="feedbackRating" required><option value="">Select rating</option><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Needs improvement</option><option value="1">1 — Poor</option></select><label for="feedbackComment">Comment (optional)</label><textarea id="feedbackComment" maxlength="500" placeholder="Tell us what went well or what can improve..."></textarea><button class="feedback-submit" type="submit">Submit feedback</button><span class="feedback-status" id="feedbackStatus"></span></form></div>`;
+            }
+        } else {
+            feedbackHtml = `<div class="feedback-card locked"><b>💬 Feedback opens after resolution</b><p style="margin-top:5px;font-size:11px">You will be able to rate the service once the department marks this complaint as resolved.</p></div>`;
+        }
+        document.getElementById("trackResult").innerHTML = `
+            <div class="card" style="margin-top:18px">
+                <h3>Grievance Found: ${escapeHTML(data.id)}</h3>
+                <div class="info-grid">
+                    <div class="info-box"><small>Category</small><b>${escapeHTML(data.category)}</b></div>
+                    <div class="info-box"><small>Suggested Department</small><b>${escapeHTML(data.department || "Public Grievance Cell")}</b></div>
+                    <div class="info-box"><small>Area</small><b>${escapeHTML(data.area)}</b></div>
+                    <div class="info-box"><small>Priority</small><b>${escapeHTML(data.priority)}</b></div>
+                    <div class="info-box"><small>Status</small><span class="status ${statusClass}">${escapeHTML(data.status)}</span></div>
+                    ${data.photo ? `<div class="info-box photo-info"><small>Attached photo</small><img src="${escapeHTML(data.photo)}" alt="Attached grievance photo"><span>${escapeHTML(data.photoName || "Problem photo")}</span></div>` : ""}
+                </div>
+                <div class="timeline"><h4>Status history</h4>${(data.history || [{status:data.status, note:"Current status", at:data.updatedAt}]).map(item => `<div class="timeline-item"><div class="timeline-dot"></div><b>${escapeHTML(item.status)}</b><p>${escapeHTML(item.note || "Status updated")} ${item.at ? `<small>${new Date(item.at).toLocaleString()}</small>` : ""}</p></div>`).join("")}</div>
+                ${feedbackHtml}
+            </div>
+        `;
+        const feedbackForm = document.getElementById("feedbackForm");
+        if(feedbackForm){
+            feedbackForm.addEventListener("submit", async function(event){
+                event.preventDefault();
+                const button = feedbackForm.querySelector("button[type=submit]");
+                const status = document.getElementById("feedbackStatus");
+                button.disabled = true;
+                status.textContent = "Saving your feedback…";
+                try {
+                    const session = currentSession();
+                    const response = await fetch(`${API_BASE}/grievances/${encodeURIComponent(data.id)}/feedback`, { method:"POST", headers:{"Content-Type":"application/json", ...(session?.token ? { Authorization:`Bearer ${session.token}` } : {})}, body:JSON.stringify({ rating:document.getElementById("feedbackRating").value, comment:document.getElementById("feedbackComment").value.trim() }) });
+                    const result = await response.json();
+                    if(!response.ok) throw new Error(result.error || "Feedback could not be saved.");
+                    showTrackingResult(result.grievance);
+                } catch(error) {
+                    status.textContent = error.message;
+                    status.style.color = "#dc2626";
+                    button.disabled = false;
+                }
+            });
+        }
+    }
+
+
+    /* ---------- AI PROCESSING DEMO ---------- */
+    const aiComplaint = document.getElementById("aiComplaint");
+    const aiCount = document.getElementById("aiCharCount");
+    const aiResults = document.getElementById("aiResults");
+    const aiSteps = document.querySelectorAll("#ai .ai-box");
+    let lastAiResult = null;
+
+    aiComplaint.addEventListener("input", function(){
+        aiCount.textContent = this.value.length + " / 500";
+    });
+
+    document.querySelectorAll(".ai-chip").forEach(function(chip){
+        chip.addEventListener("click", function(){
+            aiComplaint.value = this.dataset.sample;
+            aiCount.textContent = aiComplaint.value.length + " / 500";
+            aiComplaint.focus();
+        });
+    });
+
+    document.getElementById("analyzeComplaint").addEventListener("click", function(){
+        const text = aiComplaint.value.trim();
+        if(!text){
+            aiComplaint.focus();
+            aiResults.innerHTML = "<div class='ai-empty'><span>✍️</span><b>Add a complaint first</b><p>Describe the issue or choose one of the samples.</p></div>";
+            return;
+        }
+
+        aiSteps.forEach(step => step.classList.remove("active", "complete"));
+        aiResults.innerHTML = "<div class='ai-loading'><div class='ai-spinner'></div><b>Reviewing your complaint…</b><p style='margin-top:5px'>Checking category, urgency and department</p></div>";
+        const button = this;
+        button.disabled = true;
+        button.textContent = "Analyzing…";
+        aiSteps[0].classList.add("active");
+        fetch(`${API_BASE}/ai/analyze`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text, hasPhoto:Boolean(selectedPhotoData) }) })
+            .then(response => response.json().then(data => ({ response, data })))
+            .then(({response, data}) => {
+                if(!response.ok) throw new Error(data.error || "AI analysis failed.");
+                const result = data.analysis;
+                aiSteps.forEach((step, index) => { step.classList.remove("active"); if(index < 5) step.classList.add("complete"); });
+                const priorityColor = result.priority === "Urgent" ? "#b91c1c" : result.priority === "Important" ? "#b45309" : "#245a9b";
+                const duplicate = data.duplicateWarning ? `<div class="ai-warning">⚠️ Similar complaint found: ${escapeHTML(data.duplicateWarning.id)} (${data.duplicateWarning.score}% match). Review before submitting.</div>` : "";
+                lastAiResult = { ...result, text };
+                aiResults.innerHTML = `<div style="width:100%"><div class="ai-result-head"><b>✨ Smart triage result</b><span class="status ${result.priority === "Urgent" ? "pending" : "progress"}">${escapeHTML(result.priority)}</span></div><div class="ai-result-grid"><div class="ai-result-item"><small>Suggested category</small><b>${escapeHTML(result.category)}</b></div><div class="ai-result-item"><small>Responsible department</small><b>${escapeHTML(result.department)}</b></div><div class="ai-result-item"><small>AI summary</small><b>${escapeHTML(result.summary)}</b></div><div class="ai-result-item"><small>Recommended action</small><b>${escapeHTML(result.recommendedAction)}</b></div></div><div class="ai-confidence">Confidence · ${result.confidence}%<div class="ai-confidence-track"><div class="ai-confidence-fill" id="aiConfidenceFill"></div></div></div><p class="ai-note">${escapeHTML(result.explanation)} ${escapeHTML(result.photoInsight)} Model: ${escapeHTML(data.model)}</p>${duplicate}<div class="ai-route-action"><button type="button" class="btn btn-primary ai-use-result" id="aiUseResult">Review in complaint form →</button></div></div>`;
+                document.getElementById("aiUseResult").addEventListener("click", function(){
+                    document.getElementById("description").value = lastAiResult.text;
+                    document.getElementById("category").value = lastAiResult.category;
+                    document.getElementById("priority").value = lastAiResult.priority;
+                    document.getElementById("suggestedDepartment").value = lastAiResult.department;
+                    document.getElementById("departmentReason").textContent = "AI suggestion loaded. Review the department and add your contact/location details before submitting.";
+                    document.getElementById("departmentSuggestion").style.display = "flex";
+                    const session = currentSession();
+                    if(session?.role === "user"){
+                        document.getElementById("citizenName").value = session.name || "";
+                        if(/^\d{10}$/.test(session.identity || "")) document.getElementById("mobile").value = session.identity;
+                    }
+                    openPage("register", "Register Grievance");
+                    document.getElementById("description").focus();
+                });
+                setTimeout(() => { const fill = document.getElementById("aiConfidenceFill"); if(fill) fill.style.width = `${result.confidence}%`; }, 50);
+            })
+            .catch(error => { aiResults.innerHTML = `<div class='ai-empty'><span>⚠️</span><b>AI analysis unavailable</b><p>${escapeHTML(error.message)} Make sure the backend is running.</p></div>`; })
+            .finally(() => { button.disabled = false; button.textContent = "✨ Analyze complaint"; });
+    });
+    /* ---------- INITIAL DATA ---------- */
+
+    updateCounts();
+
+});
+</script>
+
+</body>
+</html>
+
