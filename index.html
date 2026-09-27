@@ -1637,7 +1637,7 @@ td{font-size:12px}
 
 document.addEventListener("DOMContentLoaded", function(){
 
-    const API_BASE = (new URLSearchParams(location.search).get("api") || window.SMART_GRIEVANCE_API_BASE || "http://localhost:5000/api").replace(/\/$/, "");
+    const API_BASE = (new URLSearchParams(location.search).get("api") || window.SMART_GRIEVANCE_API_BASE || "https://smart-grievance-portal-h872.onrender.com/api").replace(/\/$/, "");
 
     async function checkApiStatus(){
         const indicator = document.getElementById("apiStatus");
@@ -2492,4 +2492,5 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </body>
 </html>
+
 
