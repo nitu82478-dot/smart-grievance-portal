@@ -1229,7 +1229,7 @@ td{font-size:12px}
         <section class="page" id="userLoginPage">
             <div class="login-shell">
                 <div class="login-visual user-login-visual"><div><span class="login-kicker">CITIZEN ACCESS</span><h1>Raise and track your civic concerns.</h1><p>Login to keep your complaint history, follow responses and use the optional AI assistant from one personal workspace.</p></div><div class="login-points"><span>✓ Personal complaint history</span><span>✓ Photo and voice evidence</span><span>✓ Transparent status timeline</span></div></div>
-                <div class="login-card"><button class="login-back" type="button" data-go="dashboard">← Back to public home</button><h2>👤 User Login</h2><p>Sign in to open your citizen dashboard. Login is optional for submitting a complaint.</p><form class="auth-form" id="userLoginPageForm"><div><label for="userPageIdentity">Mobile number or email</label><input id="userPageIdentity" required placeholder="Enter mobile number or email"></div><div><label for="userPagePassword">Password</label><input id="userPagePassword" type="password" required minlength="6" placeholder="Enter password"></div><div class="auth-status" id="userLoginStatus"></div><button class="btn btn-primary" type="submit">Login as User</button></form><button class="btn btn-soft login-register" id="userRegisterFromPage" type="button">New user? Create account</button><small class="login-helper">After login, only the User Dashboard will open. Department tools stay protected.</small></div>
+                <div class="login-card"><button class="login-back" type="button" data-go="dashboard">← Back to public home</button><h2>👤 User Login</h2><p>Sign in before submitting a complaint. Your complaint history and status updates will stay linked to your account.</p><form class="auth-form" id="userLoginPageForm"><div><label for="userPageIdentity">Mobile number or email</label><input id="userPageIdentity" required placeholder="Enter mobile number or email"></div><div><label for="userPagePassword">Password</label><input id="userPagePassword" type="password" required minlength="6" placeholder="Enter password"></div><div class="auth-status" id="userLoginStatus"></div><button class="btn btn-primary" type="submit">Login as User</button></form><button class="btn btn-soft login-register" id="userRegisterFromPage" type="button">New user? Create account</button><small class="login-helper">After login, only the User Dashboard will open. Department tools stay protected.</small></div>
             </div>
         </section>
 
@@ -1269,7 +1269,7 @@ td{font-size:12px}
                     generated after successful submission.
                 </p>
 
-                <div class="public-access-note"><span>🌐</span><div><b>Login is optional.</b> Anyone can submit a complaint with a name, mobile number and location. Login is only needed to save and view your personal complaint history.</div></div>
+                <div class="public-access-note"><span>🔐</span><div><b>User login required.</b> Sign in first so your complaint, photo evidence and status updates stay linked to your citizen account.</div></div>
 
                 <form id="grievanceForm">
 
@@ -1507,7 +1507,7 @@ td{font-size:12px}
 
                 <p>AI Assistance is optional. Describe your problem in simple language and it will suggest the category, urgency and department. You can review the suggestion before opening the complaint form.</p>
 
-                <div class="ai-route-note">💡 If you already know the department, use <b>Register Complaint</b> directly. Use AI only when you want help choosing the right department.</div>
+                <div class="ai-route-note">💡 Use AI when you need help choosing the right department. A user login is required before submitting the final complaint.</div>
 
                 <div class="ai-demo">
                     <div class="ai-input-panel">
@@ -1736,11 +1736,12 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById("logoutBtn").style.display = "inline-flex";
             setRoleNavigation(user.role);
             document.getElementById(user.role === "department" ? "deskDepartment" : "userDashboardName").textContent = user.department || user.name || "Citizen";
-            openPage(user.role === "department" ? "departmentDashboard" : "userDashboard", user.role === "department" ? "Department Dashboard" : "User Dashboard");
+            const nextPage = nextPageAfterLogin(user);
+            openPage(nextPage[0], nextPage[1]);
             statusElement.textContent = "Login successful.";
             statusElement.className = "auth-status success";
         } catch(error) {
-            statusElement.textContent = error.message + " Start backend at http://localhost:5000.";
+            statusElement.textContent = error.message + " Please check your credentials and try again.";
         }
     }
 
@@ -1797,12 +1798,13 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById("logoutBtn").style.display = "inline-flex";
             setRoleNavigation(user.role);
             document.getElementById(user.role === "department" ? "deskDepartment" : "userDashboardName").textContent = user.department || user.name || "Citizen";
-            openPage(user.role === "department" ? "departmentDashboard" : "userDashboard", user.role === "department" ? "Department Dashboard" : "User Dashboard");
+            const nextPage = nextPageAfterLogin(user);
+            openPage(nextPage[0], nextPage[1]);
             authStatus.textContent = "Login successful.";
             authStatus.className = "auth-status success";
             setTimeout(() => authModal.classList.remove("open"), 450);
         } catch(error) {
-            authStatus.textContent = `${error.message} Start backend at http://localhost:5000.`;
+            authStatus.textContent = `${error.message} Please check your credentials and try again.`;
         }
     });
     try {
@@ -1893,7 +1895,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
     /* ---------- PAGE NAVIGATION ---------- */
 
+    function nextPageAfterLogin(user){
+        const pendingPage = sessionStorage.getItem("pendingPageAfterLogin");
+        sessionStorage.removeItem("pendingPageAfterLogin");
+        if(user.role === "user" && pendingPage === "register") return ["register", "Register Grievance"];
+        return user.role === "department" ? ["departmentDashboard", "Department Dashboard"] : ["userDashboard", "User Dashboard"];
+    }
+
     function openPage(pageId, title){
+
+        if(pageId === "register"){
+            const session = currentSession();
+            if(!session || session.role !== "user"){
+                sessionStorage.setItem("pendingPageAfterLogin", "register");
+                openLoginPage("user");
+                return;
+            }
+        }
+        if(pageId === "dashboard") sessionStorage.removeItem("pendingPageAfterLogin");
 
         pages.forEach(function(page){
             page.classList.remove("active");
@@ -2257,7 +2276,7 @@ document.addEventListener("DOMContentLoaded", function(){
                 if (!response.ok) throw new Error(data.error || "Complaint could not be submitted.");
                 saved = data.grievance;
             } catch (error) {
-                alert(`${error.message}\n\nCheck that the backend is running at http://localhost:5000.`);
+                alert(`${error.message}\n\nPlease check your login and try again.`);
                 return;
             }
 
