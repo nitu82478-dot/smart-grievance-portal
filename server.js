@@ -221,6 +221,21 @@ app.post("/api/auth/login", (req, res) => {
     return res.json({ message: "Login successful.", token, user: publicUser(user) });
 });
 
+app.post("/api/grievances/check-duplicates", (req, res) => {
+    const user = authUser(req);
+    if (!user || user.role !== "user") return res.status(401).json({ error: "User login required." });
+    const category = String(req.body?.category ?? "").trim();
+    const area = String(req.body?.area ?? "").trim();
+    const district = String(req.body?.district ?? "").trim();
+    const pincode = String(req.body?.pincode ?? "").trim();
+    const department = String(req.body?.department ?? "").trim();
+    if (!category || !area || !district || !pincode || !department) return res.json({ matches: [] });
+    const rows = db.prepare(
+        "SELECT id, category, department, area, district, pincode, status, created_at, description FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at DESC LIMIT 8"
+    ).all(category, area, district, pincode, department);
+    return res.json({ matches: rows.map(row => ({ id: row.id, category: row.category, department: row.department, area: row.area, status: row.status, createdAt: row.created_at, summary: String(row.description || "").slice(0, 140) })) });
+});
+
 app.post("/api/grievances", (req, res) => {
     const fields = ["name", "mobile", "pincode", "area", "district", "category", "priority", "description"];
     const grievance = {};
