@@ -231,7 +231,8 @@ app.post("/api/grievances", (req, res) => {
     grievance.photo = String(req.body?.photo ?? "");
     grievance.photoName = String(req.body?.photoName ?? "").trim();
     const user = authUser(req);
-    grievance.userId = user?.role === "user" ? user.id : null;
+    if (!user || user.role !== "user") return res.status(401).json({ error: "User login is required before submitting a grievance." });
+    grievance.userId = user.id;
     const missing = ["name", "mobile", "pincode", "area", "district", "category", "description"].filter(field => !grievance[field]);
     if (missing.length) return res.status(400).json({ error: "Required fields are missing.", fields: missing });
     if (!/^\d{10}$/.test(grievance.mobile)) return res.status(400).json({ error: "Mobile number must contain 10 digits." });
