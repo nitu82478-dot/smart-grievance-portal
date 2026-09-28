@@ -740,7 +740,7 @@ th{
 .ai-confidence-track{height:6px;background:#eaf2ff;border-radius:5px;margin-top:6px;overflow:hidden}
 .ai-confidence-fill{height:100%;width:0;background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:5px;transition:width .6s ease}
 .ai-note{font-size:11px;color:#718096;margin-top:12px}
-.public-access-note{display:flex;gap:9px;align-items:flex-start;margin:0 0 20px;padding:11px 13px;border:1px solid #cfe2ff;border-radius:10px;background:#f4f8ff;color:#315477;font-size:12px;line-height:1.5}.public-access-note b{color:#173252}.ai-route-note{margin-top:13px;padding:10px 12px;border:1px solid #d6e8ff;border-radius:9px;background:#f7fbff;color:#48627d;font-size:11px;line-height:1.5}.ai-route-action{display:flex;justify-content:flex-end;margin-top:13px}.ai-use-result{font-size:11px;padding:9px 12px}.voice-input-wrap{display:grid;gap:8px}.voice-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.voice-lang{border:1px solid #d6dee9;border-radius:8px;padding:8px 9px;background:#fff;color:#344054;font-size:11px}.voice-btn{border:1px solid #bcd5ff;border-radius:8px;padding:8px 11px;background:#eff6ff;color:#245a9b;font-size:11px;font-weight:700;cursor:pointer}.voice-btn:hover{background:#e0edff}.voice-btn.listening{background:#fee2e2;border-color:#fecaca;color:#b91c1c}.voice-btn:disabled{opacity:.55;cursor:not-allowed}.voice-status{font-size:11px;color:#718096}.voice-privacy{font-size:10px;color:#94a3b8}
+.public-access-note{display:flex;gap:9px;align-items:flex-start;margin:0 0 20px;padding:11px 13px;border:1px solid #cfe2ff;border-radius:10px;background:#f4f8ff;color:#315477;font-size:12px;line-height:1.5}.public-access-note b{color:#173252}.duplicate-warning{margin:0 0 20px;padding:14px 16px;border:1px solid #f6c453;border-radius:12px;background:#fffaf0;color:#5f4500;font-size:12px;line-height:1.5}.duplicate-warning[hidden]{display:none!important}.duplicate-warning h3{margin:0 0 6px;font-size:14px;color:#8a5b00}.duplicate-warning-list{display:grid;gap:8px;margin:10px 0}.duplicate-warning-item{padding:9px 10px;border:1px solid #f3d58a;border-radius:9px;background:#fff}.duplicate-warning-item b{color:#173252}.duplicate-warning-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.ai-route-note{margin-top:13px;padding:10px 12px;border:1px solid #d6e8ff;border-radius:9px;background:#f7fbff;color:#48627d;font-size:11px;line-height:1.5}.ai-route-action{display:flex;justify-content:flex-end;margin-top:13px}.ai-use-result{font-size:11px;padding:9px 12px}.voice-input-wrap{display:grid;gap:8px}.voice-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.voice-lang{border:1px solid #d6dee9;border-radius:8px;padding:8px 9px;background:#fff;color:#344054;font-size:11px}.voice-btn{border:1px solid #bcd5ff;border-radius:8px;padding:8px 11px;background:#eff6ff;color:#245a9b;font-size:11px;font-weight:700;cursor:pointer}.voice-btn:hover{background:#e0edff}.voice-btn.listening{background:#fee2e2;border-color:#fecaca;color:#b91c1c}.voice-btn:disabled{opacity:.55;cursor:not-allowed}.voice-status{font-size:11px;color:#718096}.voice-privacy{font-size:10px;color:#94a3b8}
 .ai-box{transition:border-color .2s,transform .2s,box-shadow .2s}
 .ai-box.active{border-color:#60a5fa;background:#eff6ff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(37,99,235,.1)}
 .ai-box.complete .ai-num{background:#16a34a}
@@ -1270,6 +1270,8 @@ td{font-size:12px}
                 </p>
 
                 <div class="public-access-note"><span>🔐</span><div><b>User login required.</b> Sign in first so your complaint, photo evidence and status updates stay linked to your citizen account.</div></div>
+
+                <div class="duplicate-warning" id="duplicateWarning" hidden aria-live="polite"><h3>⚠️ Similar complaint found</h3><div id="duplicateWarningText">A similar complaint is already active in this area.</div><div class="duplicate-warning-list" id="duplicateWarningList"></div><div class="duplicate-warning-actions"><button class="btn btn-soft" id="duplicateCancel" type="button">Review my complaint</button><button class="btn btn-primary" id="duplicateSubmitAnyway" type="button">Submit anyway</button></div></div>
 
                 <form id="grievanceForm">
 
@@ -2193,6 +2195,49 @@ document.addEventListener("DOMContentLoaded", function(){
 
     /* ---------- REGISTER FORM ---------- */
 
+    let duplicateOverride = false;
+    let duplicateDecisionResolver = null;
+
+    function resolveDuplicateDecision(value){
+        const warning = document.getElementById("duplicateWarning");
+        const resolver = duplicateDecisionResolver;
+        duplicateDecisionResolver = null;
+        warning.hidden = true;
+        if(resolver) resolver(value);
+    }
+
+    function requestDuplicateDecision(matches){
+        const warning = document.getElementById("duplicateWarning");
+        const list = document.getElementById("duplicateWarningList");
+        document.getElementById("duplicateWarningText").textContent = matches.length === 1
+            ? "A similar active complaint was found in this area."
+            : matches.length + " similar active complaints were found in this area.";
+        list.innerHTML = matches.map(match => '<div class="duplicate-warning-item"><b>' + escapeHTML(match.id) + '</b> · ' + escapeHTML(match.status) + '<br><span>' + escapeHTML(match.category) + ' · ' + escapeHTML(match.area) + '</span><br><small>' + escapeHTML(match.summary || "Similar complaint") + '</small></div>').join("");
+        warning.hidden = false;
+        warning.scrollIntoView({behavior:"smooth", block:"center"});
+        return new Promise(resolve => { duplicateDecisionResolver = resolve; });
+    }
+
+    document.getElementById("duplicateCancel").addEventListener("click", () => resolveDuplicateDecision(false));
+    document.getElementById("duplicateSubmitAnyway").addEventListener("click", () => { duplicateOverride = true; resolveDuplicateDecision(true); });
+
+    async function findDuplicateComplaints(grievance){
+        const session = currentSession();
+        if(!session?.token) return [];
+        try {
+            const response = await fetch(API_BASE + "/grievances/check-duplicates", {
+                method:"POST",
+                headers:{"Content-Type":"application/json", Authorization:"Bearer " + session.token},
+                body:JSON.stringify(grievance)
+            });
+            if(!response.ok) return [];
+            const result = await response.json();
+            return Array.isArray(result.matches) ? result.matches : [];
+        } catch(_) {
+            return [];
+        }
+    }
+
     document
         .getElementById("grievanceForm")
         .addEventListener("submit", async function(event){
@@ -2263,6 +2308,12 @@ document.addEventListener("DOMContentLoaded", function(){
                 photo: selectedPhotoData || "",
                 photoName: document.getElementById("problemPhoto").files?.[0]?.name || ""
             };
+
+            if(!duplicateOverride){
+                const duplicates = await findDuplicateComplaints(grievance);
+                if(duplicates.length && !(await requestDuplicateDecision(duplicates))) return;
+            }
+            duplicateOverride = false;
 
             let saved;
             try {
