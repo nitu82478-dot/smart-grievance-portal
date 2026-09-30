@@ -994,6 +994,24 @@ td{font-size:12px}
 .sidebar-bottom b{color:#f6fbff}
 .sidebar-collapsed .nav-btn{color:#d4e6f5}
 
+/* Guided location and profile fields */
+.profile-note,.location-help{display:block;margin-top:5px;color:#718096;font-size:10px;line-height:1.45}
+.profile-field input[readonly]{background:#f7fbff;color:#244567;border-color:#cfe0f3}
+.location-picker{grid-column:1/-1;padding:14px;border:1px solid #dbe7f5;border-radius:11px;background:#fbfdff}
+.location-picker-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.location-picker-head label{display:block}
+.location-actions{display:flex;gap:8px;flex-wrap:wrap}
+.location-btn,.manual-location-btn{border:1px solid #9fd4e6;border-radius:8px;padding:9px 11px;background:#ecfeff;color:#0e7490;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.location-btn:hover,.manual-location-btn:hover{background:#cffafe}
+.location-btn:disabled{opacity:.65;cursor:wait}
+.manual-location-btn{border-color:#d6e0ed;background:#fff;color:#526074}
+.location-status{min-height:16px;margin-top:9px;color:#64748b;font-size:11px}
+.location-status.success{color:#15803d}.location-status.error{color:#b91c1c}
+.location-summary{margin-top:9px;padding:9px 10px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:11px;line-height:1.45}
+.location-summary[hidden],.manual-location-fields[hidden]{display:none!important}
+.manual-location-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:11px;padding-top:11px;border-top:1px dashed #dbe7f5}
+@media(max-width:700px){.location-picker-head{display:block}.location-actions{margin-top:10px}.manual-location-fields{grid-template-columns:1fr}}
+
 </style>
 </head>
 
@@ -1296,41 +1314,38 @@ td{font-size:12px}
 
                     <div class="form-grid">
 
-                        <div class="field">
-                            <label>Citizen Name *</label>
-                            <input id="citizenName" required placeholder="Enter full name">
+                        <div class="field profile-field">
+                            <label for="citizenName">Citizen Name *</label>
+                            <input id="citizenName" required readonly placeholder="Filled from your account">
+                            <small class="profile-note">Automatically filled from your logged-in account.</small>
                         </div>
 
-                        <div class="field">
-                            <label>Mobile Number *</label>
-                            <input id="mobile" required maxlength="10" inputmode="numeric" placeholder="10 digit mobile number">
+                        <div class="field profile-field">
+                            <label for="mobile">Mobile Number *</label>
+                            <input id="mobile" required maxlength="10" inputmode="numeric" placeholder="Filled from your account">
+                            <small class="profile-note" id="mobileNote">Automatically filled when you log in with your mobile number.</small>
                         </div>
 
-                        <div class="field">
-                            <label>Pincode *</label>
-                            <input id="pincode" required maxlength="6" inputmode="numeric" placeholder="Enter pincode">
-                        </div>
-
-                        <div class="field">
-                            <label>Ward Number</label>
-                            <input id="ward" placeholder="Enter ward number">
-                        </div>
-
-                        <div class="field">
-                            <label>Area / Locality *</label>
-                            <input id="area" required placeholder="Example: Neelbad">
-                        </div>
-
-                        <div class="field">
-                            <label>District *</label>
-                            <select id="district" required>
-                                <option value="">Select district</option>
-                                <option>Bhopal</option>
-                                <option>Indore</option>
-                                <option>Jabalpur</option>
-                                <option>Gwalior</option>
-                                <option>Other</option>
-                            </select>
+                        <div class="location-picker">
+                            <div class="location-picker-head">
+                                <div>
+                                    <label for="location">Complaint Location *</label>
+                                    <small class="location-help">Detect your location to fill area, district and pincode automatically.</small>
+                                </div>
+                                <div class="location-actions">
+                                    <button class="location-btn" id="detectLocationBtn" type="button">📍 Detect my location</button>
+                                    <button class="manual-location-btn" id="manualLocationBtn" type="button">Enter manually</button>
+                                </div>
+                            </div>
+                            <div class="location-status" id="locationStatus" aria-live="polite">Location is used only for routing your complaint to the correct department.</div>
+                            <input id="location" required placeholder="Street, landmark or nearby location">
+                            <div class="location-summary" id="locationSummary" hidden></div>
+                            <div class="manual-location-fields" id="manualLocationFields" hidden>
+                                <div class="field"><label for="area">Area / Locality *</label><input id="area" placeholder="Example: Neelbad"></div>
+                                <div class="field"><label for="district">District *</label><input id="district" placeholder="Example: Bhopal"></div>
+                                <div class="field"><label for="pincode">Pincode *</label><input id="pincode" maxlength="6" inputmode="numeric" placeholder="6 digit pincode"></div>
+                            </div>
+                            <input id="ward" type="hidden" value="">
                         </div>
 
                         <div class="field">
@@ -1861,7 +1876,100 @@ document.addEventListener("DOMContentLoaded", function(){
         reader.readAsDataURL(file);
     });
     document.getElementById("removePhoto").addEventListener("click", () => { problemPhoto.value = ""; selectedPhotoData = ""; photoPreviewImage.removeAttribute("src"); photoPreview.style.display = "none"; });
-    document.getElementById("grievanceForm").addEventListener("reset", () => { selectedPhotoData = ""; photoPreview.style.display = "none"; photoPreviewImage.removeAttribute("src"); });
+    document.getElementById("grievanceForm").addEventListener("reset", () => { selectedPhotoData = ""; photoPreview.style.display = "none"; photoPreviewImage.removeAttribute("src"); resetLocationFields(); prefillCitizenDetails(); });
+
+    /* ---------- LOCATION AUTO-DETECTION ---------- */
+    const detectLocationBtn = document.getElementById("detectLocationBtn");
+    const manualLocationBtn = document.getElementById("manualLocationBtn");
+    const manualLocationFields = document.getElementById("manualLocationFields");
+    const locationStatus = document.getElementById("locationStatus");
+    const locationSummary = document.getElementById("locationSummary");
+    const locationInput = document.getElementById("location");
+    const areaInput = document.getElementById("area");
+    const districtInput = document.getElementById("district");
+    const pincodeInput = document.getElementById("pincode");
+
+    function setLocationStatus(message, kind = ""){
+        locationStatus.textContent = message;
+        locationStatus.className = `location-status ${kind}`.trim();
+    }
+
+    function resetLocationFields(){
+        if(!locationInput) return;
+        locationInput.value = "";
+        areaInput.value = "";
+        districtInput.value = "";
+        pincodeInput.value = "";
+        locationSummary.hidden = true;
+        locationSummary.textContent = "";
+        manualLocationFields.hidden = true;
+        detectLocationBtn.disabled = false;
+        detectLocationBtn.textContent = "📍 Detect my location";
+        setLocationStatus("Location is used only for routing your complaint to the correct department.");
+    }
+
+    function showManualLocation(){
+        manualLocationFields.hidden = false;
+        setLocationStatus("Enter your area, district and pincode below if you prefer not to share your current location.");
+        areaInput.focus();
+    }
+
+    function geolocationMessage(error){
+        if(error?.code === 1) return "Location permission was denied. You can enter the details manually.";
+        if(error?.code === 2) return "Your location could not be found. Try again or enter it manually.";
+        if(error?.code === 3) return "Location request timed out. Try again or enter it manually.";
+        return "Location could not be detected. You can enter the details manually.";
+    }
+
+    async function reverseGeocode(position){
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const url = new URL("https://nominatim.openstreetmap.org/reverse");
+        url.search = new URLSearchParams({ format:"jsonv2", lat:String(latitude), lon:String(longitude), zoom:"18", addressdetails:"1" }).toString();
+        const response = await fetch(url, { headers:{ Accept:"application/json" } });
+        if(!response.ok) throw new Error("Address lookup is temporarily unavailable.");
+        const data = await response.json();
+        const address = data.address || {};
+        const district = address.city || address.town || address.municipality || address.county || address.state_district || "";
+        const area = address.suburb || address.neighbourhood || address.quarter || address.village || address.city_district || district || "";
+        const pincodeMatch = String(address.postcode || "").match(/\d{6}/);
+        const pincode = pincodeMatch ? pincodeMatch[0] : "";
+        const road = [address.house_number, address.road].filter(Boolean).join(" ");
+        const readable = [road, area, district, address.state, pincode].filter(Boolean).join(", ");
+        if(!area || !district || !pincode) throw new Error("The location service did not return a complete address. Please enter the area and pincode manually.");
+        areaInput.value = area;
+        districtInput.value = district;
+        pincodeInput.value = pincode;
+        locationInput.value = `${readable} (GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
+        locationSummary.textContent = `✓ Detected: ${readable}. Please check it before submitting.`;
+        locationSummary.hidden = false;
+        manualLocationFields.hidden = true;
+        setLocationStatus("Location detected successfully.", "success");
+        detectLocationBtn.textContent = "↻ Detect again";
+    }
+
+    async function detectCurrentLocation(){
+        if(!navigator.geolocation){
+            showManualLocation();
+            setLocationStatus("This browser does not support location. Please enter the details manually.", "error");
+            return;
+        }
+        detectLocationBtn.disabled = true;
+        detectLocationBtn.textContent = "Detecting…";
+        setLocationStatus("Requesting your location permission…");
+        navigator.geolocation.getCurrentPosition(
+            async position => {
+                try { await reverseGeocode(position); }
+                catch(error){ showManualLocation(); setLocationStatus(error.message, "error"); }
+                finally { detectLocationBtn.disabled = false; if(detectLocationBtn.textContent === "Detecting…") detectLocationBtn.textContent = "📍 Detect my location"; }
+            },
+            error => { showManualLocation(); setLocationStatus(geolocationMessage(error), "error"); detectLocationBtn.disabled = false; detectLocationBtn.textContent = "📍 Detect my location"; },
+            { enableHighAccuracy:true, timeout:12000, maximumAge:60000 }
+        );
+    }
+
+    detectLocationBtn.addEventListener("click", detectCurrentLocation);
+    manualLocationBtn.addEventListener("click", showManualLocation);
 
 
     /* ---------- VOICE INPUT ---------- */
@@ -1948,6 +2056,8 @@ document.addEventListener("DOMContentLoaded", function(){
         target.classList.add("active");
         document.body.classList.toggle("home-simple", pageId === "dashboard");
         document.body.classList.toggle("login-page", pageId === "userLoginPage" || pageId === "departmentLoginPage");
+
+        if(pageId === "register") prefillCitizenDetails();
 
         pageTitle.textContent = title;
         crumb.textContent = title;
@@ -2072,6 +2182,25 @@ document.addEventListener("DOMContentLoaded", function(){
     function currentSession(){
         try { return JSON.parse(localStorage.getItem("smartGrievanceSession") || "null"); }
         catch(_) { return null; }
+    }
+
+    function prefillCitizenDetails(){
+        const session = currentSession();
+        const nameInput = document.getElementById("citizenName");
+        const mobileInput = document.getElementById("mobile");
+        const mobileNote = document.getElementById("mobileNote");
+        if(!nameInput || !mobileInput || session?.role !== "user") return;
+        nameInput.value = session.name || "";
+        nameInput.readOnly = Boolean(session.name);
+        const identity = String(session.identity || "");
+        if(/^\d{10}$/.test(identity)){
+            mobileInput.value = identity;
+            mobileInput.readOnly = true;
+            if(mobileNote) mobileNote.textContent = "Filled from your logged-in mobile number.";
+        } else {
+            mobileInput.readOnly = false;
+            if(mobileNote) mobileNote.textContent = "Your account uses email. Enter your 10-digit mobile number once.";
+        }
     }
 
     async function loadMyGrievances(){
@@ -2286,6 +2415,12 @@ document.addEventListener("DOMContentLoaded", function(){
                     "Please enter a valid 6 digit pincode."
                 );
 
+                return;
+            }
+
+            if(!document.getElementById("area").value.trim() || !document.getElementById("district").value.trim()){
+                alert("Please detect your location or enter the area and district manually.");
+                showManualLocation();
                 return;
             }
 
