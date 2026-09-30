@@ -261,6 +261,12 @@ app.post("/api/grievances", (req, res) => {
     if (!/^\d{6}$/.test(grievance.pincode)) return res.status(400).json({ error: "Pincode must contain 6 digits." });
     if (grievance.description.length > 5000) return res.status(400).json({ error: "Description is too long." });
     if (grievance.photo && !grievance.photo.startsWith("data:image/")) return res.status(400).json({ error: "Photo must be a valid image." });
+    const existing = db.prepare(
+        "SELECT * FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at ASC LIMIT 1"
+    ).get(grievance.category, grievance.area, grievance.district, grievance.pincode, grievance.department);
+    if (existing) {
+        return res.json({ message: "This problem is already registered at the same place.", duplicate: true, grievance: mapGrievance(existing) });
+    }
     const now = new Date().toISOString();
     const saved = { id: nextId(), ...grievance, status: "Pending", createdAt: now, updatedAt: now, history: [{ status: "Pending", at: now, note: "Grievance registered" }] };
     db.prepare(`INSERT INTO grievances
