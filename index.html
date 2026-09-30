@@ -2386,10 +2386,7 @@ document.addEventListener("DOMContentLoaded", function(){
             }
 
 
-            if(!/^[0-9]{6}$/.test(pincode)){
-
-                alert(
-                    "Please enter a vali            if(detectedPincode && pincode && pincode !== detectedPincode){
+            if(detectedPincode && pincode && pincode !== detectedPincode){
                 alert(`The detected location has pincode ${detectedPincode}. Please use that pincode or detect your location again.`);
                 return;
             }
@@ -2400,7 +2397,7 @@ document.addEventListener("DOMContentLoaded", function(){
                 return;
             }
 
-            const verifiedDistrict=pincodeResult.offices?.map(office=>office?.District).find(Boolean)||"";const currentDistrict=districtInput.value.trim();const districtNeedsVerification=currentDistrict&&!/tehsil|tahsil/i.test(currentDistrict);if(districtNeedsVerification&&pincodeResult.offices?.length){const normalizedDistrict=currentDistrict.toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim();const districtMatches=pincodeResult.offices.some(office=>String(office?.District||"").toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim()===normalizedDistrict);if(!districtMatches){alert(`Pincode ${pincode} does not match district ${currentDistrict}. Please check the location details.`);pincodeInput.focus();return;}}if(verifiedDistrict&&(!currentDistrict||/tehsil|tahsil/i.test(currentDistrict))){districtInput.value=verifiedDistrict;}if(!document.getElementById("area").value.trim() || !document.getElementById("district").value.trim()){
+const verifiedDistrict=pincodeResult.offices?.map(office=>office?.District).find(Boolean)||"";const currentDistrict=districtInput.value.trim();const districtNeedsVerification=currentDistrict&&!/tehsil|tahsil/i.test(currentDistrict);if(districtNeedsVerification&&pincodeResult.offices?.length){const normalizedDistrict=currentDistrict.toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim();const districtMatches=pincodeResult.offices.some(office=>String(office?.District||"").toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim()===normalizedDistrict);if(!districtMatches){alert(`Pincode ${pincode} does not match district ${currentDistrict}. Please check the location details.`);pincodeInput.focus();return;}}if(verifiedDistrict&&(!currentDistrict||/tehsil|tahsil/i.test(currentDistrict))){districtInput.value=verifiedDistrict;}if(!document.getElementById("area").value.trim() || !document.getElementById("district").value.trim()){
                 alert("Please detect your location or enter the area and district manually.");
                 showManualLocation();
                 return;
