@@ -57,6 +57,7 @@ const grievanceColumns = db.prepare("PRAGMA table_info(grievances)").all().map(c
 if(!grievanceColumns.includes("feedback_rating")) db.exec("ALTER TABLE grievances ADD COLUMN feedback_rating INTEGER");
 if(!grievanceColumns.includes("feedback_comment")) db.exec("ALTER TABLE grievances ADD COLUMN feedback_comment TEXT");
 if(!grievanceColumns.includes("feedback_at")) db.exec("ALTER TABLE grievances ADD COLUMN feedback_at TEXT");
+if(!grievanceColumns.includes("feedback_history")) db.exec("ALTER TABLE grievances ADD COLUMN feedback_history TEXT");
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
     const hash = crypto.scryptSync(password, salt, 64).toString("hex");
@@ -100,6 +101,19 @@ function readLegacyGrievances() {
 }
 
 function mapGrievance(row) {
+    let feedbackHistory = [];
+    try { feedbackHistory = JSON.parse(row.feedback_history || "[]"); } catch (_) { feedbackHistory = []; }
+    if (!feedbackHistory.length && row.feedback_rating != null) {
+        feedbackHistory = [{
+            rating: Number(row.feedback_rating),
+            comment: row.feedback_comment || "",
+            statusSignal: "resolved",
+            aiStatus: "Resolved",
+            aiReason: "Legacy feedback recorded after resolution.",
+            submittedAt: row.feedback_at || ""
+        }];
+    }
+    const latestFeedback = feedbackHistory[feedbackHistory.length - 1] || null;
     return {
         id: row.id, name: row.name, mobile: row.mobile, pincode: row.pincode,
         area: row.area, district: row.district, category: row.category,
@@ -108,7 +122,8 @@ function mapGrievance(row) {
         photo: row.photo || "", photoName: row.photo_name || "", status: row.status,
         createdAt: row.created_at, updatedAt: row.updated_at,
         history: JSON.parse(row.history || "[]"),
-        feedback: row.feedback_rating == null ? null : { rating: Number(row.feedback_rating), comment: row.feedback_comment || "", submittedAt: row.feedback_at || "" }
+        feedback: latestFeedback,
+        feedbackHistory
     };
 }
 
@@ -255,7 +270,7 @@ app.post("/api/grievances", (req, res) => {
     const user = authUser(req);
     if (!user || user.role !== "user") return res.status(401).json({ error: "User login is required before submitting a grievance." });
     grievance.userId = user.id;
-    const missing = ["name", "mobile", "area", "district", "category", "description"].filter(field => !grievance[field]);
+    const missing = ["name", "mobile", "pincode", "area", "district", "category", "description"].filter(field => !grievance[field]);
     if (missing.length) return res.status(400).json({ error: "Required fields are missing.", fields: missing });
     if (!/^\d{10}$/.test(grievance.mobile)) return res.status(400).json({ error: "Mobile number must contain 10 digits." });
     if (grievance.pincode && !/^\d{6}$/.test(grievance.pincode)) return res.status(400).json({ error: "Pincode must contain 6 digits." });
@@ -303,36 +318,58 @@ app.get("/api/department/grievances", (req, res) => {
     return res.json({ department: user.department, total: grievances.length, grievances });
 });
 
+function analyzeCitizenFeedback(statusSignal, comment) {
+    const signal = String(statusSignal || "").trim().toLowerCase();
+    const text = String(comment || "").trim().toLowerCase();
+    const keywordSets = {
+        still_pending: ["not started", "no action", "still pending", "not resolved", "not fixed", "abhi bhi", "काम शुरू नहीं", "हल नहीं"],
+        in_progress: ["in progress", "work started", "team visited", "under process", "inspection", "काम चल", "कार्यवाही"],
+        resolved: ["resolved", "fixed", "solved", "done", "problem solved", "ठीक", "हल हो", "समस्या समाप्त"]
+    };
+    const allowed = ["still_pending", "in_progress", "resolved"];
+    if (!allowed.includes(signal)) return { status: "Pending", confidence: 72, reason: "The citizen did not select a valid progress option, so the grievance remains pending." };
+    const matches = (keywordSets[signal] || []).filter(keyword => text.includes(keyword));
+    const status = signal === "resolved" ? "Resolved" : signal === "in_progress" ? "In Progress" : "Pending";
+    const confidence = Math.min(98, 86 + (matches.length * 4));
+    const reason = matches.length
+        ? `AI matched the citizen's selected update and feedback signal: ${matches.join(", ")}.`
+        : `AI classified the citizen's update as ${status}.`;
+    return { status, confidence, reason };
+}
+
+// Department officers can review cases, but they cannot change status manually.
+// Status is updated only after the citizen submits progress feedback while tracking.
 app.patch("/api/grievances/:id/status", (req, res) => {
-    const user = authUser(req);
-    if (!user || user.role !== "department") return res.status(401).json({ error: "Department login required." });
-    const allowed = ["Pending", "In Progress", "Resolved"];
-    const status = String(req.body?.status ?? "");
-    if (!allowed.includes(status)) return res.status(400).json({ error: "Status must be Pending, In Progress, or Resolved." });
-    const row = db.prepare("SELECT * FROM grievances WHERE lower(id) = lower(?)").get(req.params.id);
-    if (!row) return res.status(404).json({ error: "Grievance not found." });
-    const history = JSON.parse(row.history || "[]");
-    const now = new Date().toISOString();
-    history.push({ status, at: now, note: String(req.body?.note ?? `Updated by ${user.department}`) });
-    db.prepare("UPDATE grievances SET status = ?, updated_at = ?, history = ? WHERE id = ?").run(status, now, JSON.stringify(history), row.id);
-    return res.json({ message: "Status updated.", grievance: mapGrievance(db.prepare("SELECT * FROM grievances WHERE id = ?").get(row.id)) });
+    return res.status(410).json({ error: "Department status actions are disabled. Status is updated from citizen feedback while tracking the grievance." });
 });
 
-// Citizens can submit one rating/comment after their complaint is resolved.
+// Citizens can send progress feedback repeatedly while a grievance is open.
+// The AI classifier converts each update into Pending, In Progress, or Resolved.
 app.post("/api/grievances/:id/feedback", (req, res) => {
-    const rating = Number(req.body?.rating);
+    const rawRating = req.body?.rating;
+    const rating = rawRating === "" || rawRating == null ? null : Number(rawRating);
+    const statusSignal = String(req.body?.statusSignal ?? "").trim().toLowerCase();
     const comment = String(req.body?.comment ?? "").trim();
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ error: "Rating must be a whole number from 1 to 5." });
+    if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) return res.status(400).json({ error: "Rating must be a whole number from 1 to 5." });
+    if (!["still_pending", "in_progress", "resolved"].includes(statusSignal)) return res.status(400).json({ error: "Please select whether the problem is pending, in progress, or resolved." });
     if (comment.length > 500) return res.status(400).json({ error: "Feedback comment must be 500 characters or less." });
     const row = db.prepare("SELECT * FROM grievances WHERE lower(id) = lower(?)").get(req.params.id);
     if (!row) return res.status(404).json({ error: "Grievance not found." });
-    if (row.status !== "Resolved") return res.status(400).json({ error: "Feedback becomes available after the grievance is resolved." });
-    if (row.feedback_rating != null) return res.status(409).json({ error: "Feedback has already been submitted for this grievance." });
+    if (row.status === "Resolved") return res.status(400).json({ error: "This grievance is already resolved, so no further updates are needed." });
     const user = authUser(req);
     if (row.user_id && (!user || user.role !== "user" || user.id !== row.user_id)) return res.status(403).json({ error: "Please login with the citizen account used for this grievance." });
+    const ai = analyzeCitizenFeedback(statusSignal, comment);
     const now = new Date().toISOString();
-    db.prepare("UPDATE grievances SET feedback_rating = ?, feedback_comment = ?, feedback_at = ? WHERE id = ?").run(rating, comment, now, row.id);
-    return res.status(201).json({ message: "Thank you for your feedback.", grievance: mapGrievance(db.prepare("SELECT * FROM grievances WHERE id = ?").get(row.id)) });
+    let feedbackHistory = [];
+    try { feedbackHistory = JSON.parse(row.feedback_history || "[]"); } catch (_) { feedbackHistory = []; }
+    const entry = { rating, comment, statusSignal, aiStatus: ai.status, aiConfidence: ai.confidence, aiReason: ai.reason, submittedAt: now };
+    feedbackHistory.push(entry);
+    let history = [];
+    try { history = JSON.parse(row.history || "[]"); } catch (_) { history = []; }
+    history.push({ status: ai.status, at: now, note: `Citizen feedback analyzed by AI: ${ai.reason}` });
+    db.prepare("UPDATE grievances SET status = ?, updated_at = ?, history = ?, feedback_rating = ?, feedback_comment = ?, feedback_at = ?, feedback_history = ? WHERE id = ?")
+        .run(ai.status, now, JSON.stringify(history), rating, comment, now, JSON.stringify(feedbackHistory), row.id);
+    return res.status(201).json({ message: "Feedback analyzed and grievance status updated.", ai, grievance: mapGrievance(db.prepare("SELECT * FROM grievances WHERE id = ?").get(row.id)) });
 });
 
 app.use((error, req, res, next) => { console.error(error); res.status(500).json({ error: "Internal server error." }); });
