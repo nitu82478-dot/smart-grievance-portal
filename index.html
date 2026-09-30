@@ -1043,8 +1043,8 @@ td{font-size:12px}
             <span class="nav-icon">👤</span> User Dashboard
         </button>
 
-        <button class="nav-btn" data-page="register" data-title="Register Grievance">
-            <span class="nav-icon">📝</span> Register Grievance
+        <button class="nav-btn" data-page="ai" data-title="AI Assistance">
+            <span class="nav-icon">🤖</span> AI Assistance
         </button>
 
         <button class="nav-btn" data-page="track" data-title="Track Complaint">
@@ -1061,10 +1061,6 @@ td{font-size:12px}
 
         <button class="nav-btn department-only" id="departmentDashboardNav" data-page="departmentDashboard" data-title="Department Dashboard" style="display:none">
             <span class="nav-icon">📊</span> Department Dashboard
-        </button>
-
-        <button class="nav-btn" data-page="ai" data-title="AI Processing">
-            <span class="nav-icon">🤖</span> AI Processing
         </button>
 
         <button class="nav-btn" data-page="about" data-title="About Project">
@@ -1094,10 +1090,9 @@ td{font-size:12px}
 
     <nav class="home-nav" aria-label="Primary navigation">
         <button type="button" data-go="dashboard">Home</button>
-        <button type="button" data-go="register">Register Complaint</button>
+        <button type="button" data-go="ai">AI Assistance</button>
         <button type="button" data-go="track">Track Complaint</button>
         <button type="button" data-go="grievances">My Grievances</button>
-        <button type="button" data-go="ai">AI Assistance</button>
         <button type="button" data-go="about">About</button>
     </nav>
 
@@ -1157,8 +1152,8 @@ td{font-size:12px}
 
                 <div class="hero-actions">
 
-                    <button class="btn btn-white" data-go="register">
-                        + Register Grievance
+                    <button class="btn btn-white" data-go="ai">
+                        ✨ Start with AI Assistance
                     </button>
 
                     <button class="btn btn-primary" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25)" data-go="track">
@@ -1280,9 +1275,9 @@ td{font-size:12px}
         <!-- ================= USER DASHBOARD ================= -->
 
         <section class="page" id="userDashboard">
-            <div class="role-hero user-role-hero"><span class="eyebrow">CITIZEN WORKSPACE</span><h1>Welcome back, <span id="userDashboardName">Citizen</span></h1><p>Manage your complaints, attach evidence and follow every response from one place.</p><div class="hero-actions"><button class="btn btn-primary" data-go="register">+ Register Complaint</button><button class="btn btn-soft" data-go="grievances">View My Grievances</button></div></div>
+            <div class="role-hero user-role-hero"><span class="eyebrow">CITIZEN WORKSPACE</span><h1>Welcome back, <span id="userDashboardName">Citizen</span></h1><p>Manage your complaints, attach evidence and follow every response from one place.</p><div class="hero-actions"><button class="btn btn-primary" data-go="ai">✨ Start with AI Assistance</button><button class="btn btn-soft" data-go="grievances">View My Grievances</button></div></div>
             <div class="role-stats"><div><small>Total submitted</small><b id="userDashTotal">0</b></div><div><small>Pending</small><b id="userDashPending">0</b></div><div><small>In progress</small><b id="userDashProgress">0</b></div><div><small>Resolved</small><b id="userDashResolved">0</b></div></div>
-            <div class="card quick-card"><h2>What would you like to do?</h2><div class="quick-actions"><button data-go="register">📝 <b>Register a complaint</b><span>Describe an issue and attach a photo</span></button><button data-go="track">🔎 <b>Track a complaint</b><span>Check the latest status and history</span></button><button data-go="ai">✨ <b>Ask AI Assistant</b><span>Find the right department faster</span></button></div></div>
+            <div class="card quick-card"><h2>What would you like to do?</h2><div class="quick-actions"><button data-go="ai">✨ <b>Start with AI Assistance</b><span>Find the right department before registering</span></button><button data-go="track">🔎 <b>Track a complaint</b><span>Check the latest status and history</span></button><button data-go="ai">✨ <b>Ask AI Assistant</b><span>Find the right department faster</span></button></div></div>
         </section>
 
         <!-- ================= DEPARTMENT DASHBOARD ================= -->
