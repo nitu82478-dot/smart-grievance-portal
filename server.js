@@ -236,10 +236,10 @@ app.post("/api/grievances/check-duplicates", (req, res) => {
     const district = String(req.body?.district ?? "").trim();
     const pincode = String(req.body?.pincode ?? "").trim();
     const department = String(req.body?.department ?? "").trim();
-    if (!category || !area || !district || !pincode || !department) return res.json({ matches: [] });
-    const rows = db.prepare(
-        "SELECT id, category, department, area, district, pincode, status, created_at, description FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at DESC LIMIT 8"
-    ).all(category, area, district, pincode, department);
+    if (!category || !area || !district || !department) return res.json({ matches: [] });
+    const rows = pincode
+        ? db.prepare("SELECT id, category, department, area, district, pincode, status, created_at, description FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at DESC LIMIT 8").all(category, area, district, pincode, department)
+        : db.prepare("SELECT id, category, department, area, district, pincode, status, created_at, description FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at DESC LIMIT 8").all(category, area, district, department);
     return res.json({ matches: rows.map(row => ({ id: row.id, category: row.category, department: row.department, area: row.area, status: row.status, createdAt: row.created_at, summary: String(row.description || "").slice(0, 140) })) });
 });
 
@@ -255,15 +255,15 @@ app.post("/api/grievances", (req, res) => {
     const user = authUser(req);
     if (!user || user.role !== "user") return res.status(401).json({ error: "User login is required before submitting a grievance." });
     grievance.userId = user.id;
-    const missing = ["name", "mobile", "pincode", "area", "district", "category", "description"].filter(field => !grievance[field]);
+    const missing = ["name", "mobile", "area", "district", "category", "description"].filter(field => !grievance[field]);
     if (missing.length) return res.status(400).json({ error: "Required fields are missing.", fields: missing });
     if (!/^\d{10}$/.test(grievance.mobile)) return res.status(400).json({ error: "Mobile number must contain 10 digits." });
-    if (!/^\d{6}$/.test(grievance.pincode)) return res.status(400).json({ error: "Pincode must contain 6 digits." });
+    if (grievance.pincode && !/^\d{6}$/.test(grievance.pincode)) return res.status(400).json({ error: "Pincode must contain 6 digits." });
     if (grievance.description.length > 5000) return res.status(400).json({ error: "Description is too long." });
     if (grievance.photo && !grievance.photo.startsWith("data:image/")) return res.status(400).json({ error: "Photo must be a valid image." });
-    const existing = db.prepare(
-        "SELECT * FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at ASC LIMIT 1"
-    ).get(grievance.category, grievance.area, grievance.district, grievance.pincode, grievance.department);
+    const existing = grievance.pincode
+        ? db.prepare("SELECT * FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND pincode = ? AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at ASC LIMIT 1").get(grievance.category, grievance.area, grievance.district, grievance.pincode, grievance.department)
+        : db.prepare("SELECT * FROM grievances WHERE lower(category) = lower(?) AND lower(area) = lower(?) AND lower(district) = lower(?) AND lower(department) = lower(?) AND status <> 'Resolved' ORDER BY created_at ASC LIMIT 1").get(grievance.category, grievance.area, grievance.district, grievance.department);
     if (existing) {
         return res.json({ message: "This problem is already registered at the same place.", duplicate: true, grievance: mapGrievance(existing) });
     }
