@@ -951,7 +951,7 @@ td{font-size:12px}
 .photo-upload{border-color:#a8caff;background:linear-gradient(180deg,#f8fbff,#f4f8ff)}
 .desk-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}.desk-heading h2{margin:5px 0 6px}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.13em;color:#8a4b72}.desk-dept{padding:8px 11px;border-radius:20px;background:#f3e9f0;color:#75164f;font-size:11px;font-weight:800}.desk-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 20px}.desk-stats>div{padding:14px;border-radius:11px;background:#f8fafc;border:1px solid #e7edf5}.desk-stats small{display:block;color:#7a8a9e;font-size:10px}.desk-stats b{display:block;margin-top:5px;font-size:22px;color:#173252}.department-only{border-left:2px solid #d78bb7}@media(max-width:700px){.desk-heading{display:block}.desk-dept{display:inline-block;margin-top:12px}.desk-stats{grid-template-columns:1fr 1fr}}
 .photo-info img{display:block;width:100px;height:70px;object-fit:cover;border-radius:7px;margin-top:6px}.photo-info span{display:block;font-size:10px;margin-top:5px;color:#6b7b90}.timeline h4{font-size:12px;color:#526074;margin-bottom:13px}.timeline-item p small{display:block;color:#94a3b8;font-size:10px;margin-top:4px}
-.desk-status{border:1px solid #d6e0ed;border-radius:7px;padding:7px;font-size:11px;background:#fff;color:#344967}.desk-update{margin-left:5px;border:0;border-radius:7px;padding:7px 9px;background:#2563eb;color:#fff;font-size:10px;font-weight:700;cursor:pointer}.desk-update:disabled{opacity:.55;cursor:wait}
+.desk-status{border:1px solid #d6e0ed;border-radius:7px;padding:7px;font-size:11px;background:#fff;color:#344967}.desk-update{margin-left:5px;border:0;border-radius:7px;padding:7px 9px;background:#2563eb;color:#fff;font-size:10px;font-weight:700;cursor:pointer}.desk-update:disabled{opacity:.55;cursor:wait}.desk-location{min-width:190px;max-width:280px;white-space:normal;line-height:1.35}.desk-location span{display:block;color:#344967;font-size:10px}.desk-map-link{display:inline-block;margin-top:5px;color:#2563eb;font-size:10px;font-weight:800;text-decoration:none}.desk-map-link:hover{text-decoration:underline}
 .ai-warning{margin-top:12px;padding:10px;border:1px solid #fed7aa;border-radius:8px;background:#fff7ed;color:#9a3412;font-size:11px;line-height:1.45}
 .role-hero{padding:34px;border-radius:22px;color:#fff;box-shadow:0 18px 38px rgba(37,99,235,.15)}.role-hero h1{font-size:30px;letter-spacing:-.04em;margin:10px 0}.role-hero p{max-width:600px;color:#e7f0ff;line-height:1.7;font-size:13px}.user-role-hero{background:linear-gradient(120deg,#123e73,#2563eb 68%,#209bd0)}.department-role-hero{background:linear-gradient(120deg,#44132f,#74154f 62%,#b52b76)}.role-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.role-stats>div{padding:18px 20px;background:#fff;border:1px solid #e5ebf3;border-radius:14px;box-shadow:0 8px 23px rgba(15,35,65,.05)}.role-stats small{display:block;color:#7d8da2;font-size:10px}.role-stats b{display:block;margin-top:7px;font-size:26px;color:#173252}.quick-card h2{margin-bottom:16px}.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.quick-actions button{display:grid;gap:5px;text-align:left;padding:17px;border:1px solid #e0e9f4;border-radius:12px;background:#fbfdff;color:#173252;cursor:pointer}.quick-actions button:hover{border-color:#8db7f5;background:#f5f9ff;transform:translateY(-2px)}.quick-actions b{font-size:12px}.quick-actions span{font-size:10px;color:#7a8a9e}.officer-note{border-left:4px solid #b52b76}.officer-note h2{margin-bottom:8px}@media(max-width:700px){.role-hero{padding:25px}.role-hero h1{font-size:25px}.role-stats{grid-template-columns:1fr 1fr}.quick-actions{grid-template-columns:1fr}}
 @media(max-width:700px){
@@ -1523,7 +1523,7 @@ td{font-size:12px}
             <div class="card">
                 <div class="desk-heading"><div><span class="eyebrow">OFFICER WORKSPACE</span><h2>🏢 Department Desk</h2><p>Review assigned grievances and keep citizens informed with timely status updates.</p></div><span class="desk-dept" id="deskDepartment">Department</span></div>
                 <div class="desk-stats"><div><small>Assigned cases</small><b id="deskTotal">0</b></div><div><small>Pending review</small><b id="deskPending">0</b></div><div><small>In progress</small><b id="deskProgress">0</b></div><div><small>Resolved</small><b id="deskResolved">0</b></div></div>
-                <div class="table-wrap"><table><thead><tr><th>ID</th><th>Citizen</th><th>Category</th><th>Area</th><th>Priority</th><th>Status</th><th>Feedback</th><th>Action</th></tr></thead><tbody id="departmentTable"><tr><td colspan="8"><p>Department login required.</p></td></tr></tbody></table></div>
+                <div class="table-wrap"><table><thead><tr><th>ID</th><th>Citizen</th><th>Category</th><th>Area</th><th>Location</th><th>Priority</th><th>Status</th><th>Feedback</th><th>Action</th></tr></thead><tbody id="departmentTable"><tr><td colspan="9"><p>Department login required.</p></td></tr></tbody></table></div>
             </div>
         </section>
 
@@ -2191,9 +2191,9 @@ document.addEventListener("DOMContentLoaded", function(){
     async function loadDepartmentDesk(){
         const table = document.getElementById("departmentTable");
         const session = currentSession();
-        if(!session?.token || session.role !== "department"){ table.innerHTML = "<tr><td colspan='8'><p>Department login required to open this workspace.</p></td></tr>"; return; }
+        if(!session?.token || session.role !== "department"){ table.innerHTML = "<tr><td colspan='9'><p>Department login required to open this workspace.</p></td></tr>"; return; }
         document.getElementById("deskDepartment").textContent = session.department || "Department";
-        table.innerHTML = "<tr><td colspan='8'><p>Loading assigned cases…</p></td></tr>";
+        table.innerHTML = "<tr><td colspan='9'><p>Loading assigned cases…</p></td></tr>";
         try {
             const response = await fetch(`${API_BASE}/department/grievances`, { headers:{ Authorization:`Bearer ${session.token}` } });
             const data = await response.json();
@@ -2204,11 +2204,11 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById("deskProgress").textContent = items.filter(item => item.status === "In Progress").length;
             document.getElementById("deskResolved").textContent = items.filter(item => item.status === "Resolved").length;
             table.innerHTML = "";
-            if(!items.length){ table.innerHTML = "<tr><td colspan='8'><p>No cases are assigned to this department yet.</p></td></tr>"; return; }
+            if(!items.length){ table.innerHTML = "<tr><td colspan='9'><p>No cases are assigned to this department yet.</p></td></tr>"; return; }
             items.forEach(item => {
                 const statusClass = item.status === "Resolved" ? "resolved" : item.status === "In Progress" ? "progress" : "pending";
                 const row = document.createElement("tr");
-                row.innerHTML = `<td>${escapeHTML(item.id)}</td><td>${escapeHTML(item.name)}</td><td>${escapeHTML(item.category)}</td><td>${escapeHTML(item.area)}</td><td>${escapeHTML(item.priority)}</td><td><span class="status ${statusClass}">${escapeHTML(item.status)}</span></td><td>${item.feedback ? `<span class="feedback-stars" title="${item.feedback.rating}/5">${"★".repeat(item.feedback.rating)}${"☆".repeat(5 - item.feedback.rating)}</span>` : `<small style="color:#94a3b8">Awaiting</small>`}</td><td><select class="desk-status" data-status-id="${escapeHTML(item.id)}"><option ${item.status === "Pending" ? "selected" : ""}>Pending</option><option ${item.status === "In Progress" ? "selected" : ""}>In Progress</option><option ${item.status === "Resolved" ? "selected" : ""}>Resolved</option></select><button class="desk-update" data-update-id="${escapeHTML(item.id)}">Update</button></td>`;
+                row.innerHTML = `<td>${escapeHTML(item.id)}</td><td>${escapeHTML(item.name)}</td><td>${escapeHTML(item.category)}</td><td>${escapeHTML(item.area)}</td><td class="desk-location"><span title="${escapeHTML([item.location, item.area, item.district, item.pincode].filter(Boolean).join(", "))}">${escapeHTML([item.location, item.area, item.district, item.pincode].filter(Boolean).join(", ") || "Not provided")}</span><a class="desk-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(item.location || [item.area, item.district, item.pincode].filter(Boolean).join(", "))}" target="_blank" rel="noopener">🗺 View on map</a></td><td>${escapeHTML(item.priority)}</td><td><span class="status ${statusClass}">${escapeHTML(item.status)}</span></td><td>${item.feedback ? `<span class="feedback-stars" title="${item.feedback.rating}/5">${"★".repeat(item.feedback.rating)}${"☆".repeat(5 - item.feedback.rating)}</span>` : `<small style="color:#94a3b8">Awaiting</small>`}</td><td><select class="desk-status" data-status-id="${escapeHTML(item.id)}"><option ${item.status === "Pending" ? "selected" : ""}>Pending</option><option ${item.status === "In Progress" ? "selected" : ""}>In Progress</option><option ${item.status === "Resolved" ? "selected" : ""}>Resolved</option></select><button class="desk-update" data-update-id="${escapeHTML(item.id)}">Update</button></td>`;
                 table.appendChild(row);
             });
             document.querySelectorAll("[data-update-id]").forEach(button => button.addEventListener("click", async function(){
@@ -2222,7 +2222,7 @@ document.addEventListener("DOMContentLoaded", function(){
                     loadDepartmentDesk();
                 } catch(error) { alert(error.message); this.disabled = false; }
             }));
-        } catch(error) { table.innerHTML = `<tr><td colspan='8'><p style='color:#dc2626'>${escapeHTML(error.message)}</p></td></tr>`; }
+        } catch(error) { table.innerHTML = `<tr><td colspan='9'><p style='color:#dc2626'>${escapeHTML(error.message)}</p></td></tr>`; }
     }
 
     function setRoleStats(prefix, items){
