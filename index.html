@@ -1308,7 +1308,7 @@ td{font-size:12px}
 
                 <div class="public-access-note"><span>🔐</span><div><b>User login required.</b> Sign in first so your complaint, photo evidence and status updates stay linked to your citizen account.</div></div>
 
-                <div class="duplicate-warning" id="duplicateWarning" hidden aria-live="polite"><h3>⚠️ Similar complaint found</h3><div id="duplicateWarningText">A similar complaint is already active in this area.</div><div class="duplicate-warning-list" id="duplicateWarningList"></div><div class="duplicate-warning-actions"><button class="btn btn-soft" id="duplicateCancel" type="button">Review my complaint</button><button class="btn btn-primary" id="duplicateSubmitAnyway" type="button">Submit anyway</button></div></div>
+                <div class="duplicate-warning" id="duplicateWarning" hidden aria-live="polite"><h3>⚠️ Complaint already registered</h3><div id="duplicateWarningText">This problem is already active in this area.</div><div class="duplicate-warning-list" id="duplicateWarningList"></div><div class="duplicate-warning-actions"><button class="btn btn-soft" id="duplicateCancel" type="button">Review details</button><button class="btn btn-primary" id="duplicateUseExisting" type="button">Use existing grievance</button></div></div>
 
                 <form id="grievanceForm">
 
@@ -2328,8 +2328,8 @@ document.addEventListener("DOMContentLoaded", function(){
         const warning = document.getElementById("duplicateWarning");
         const list = document.getElementById("duplicateWarningList");
         document.getElementById("duplicateWarningText").textContent = matches.length === 1
-            ? "A similar active complaint was found in this area."
-            : matches.length + " similar active complaints were found in this area.";
+            ? `This problem is already registered in this area. Grievance ${matches[0].id} will be shared with you.`
+            : matches.length + " active complaints for this problem were found in this area. The latest grievance ID will be shared with you.";
         list.innerHTML = matches.map(match => '<div class="duplicate-warning-item"><b>' + escapeHTML(match.id) + '</b> · ' + escapeHTML(match.status) + '<br><span>' + escapeHTML(match.category) + ' · ' + escapeHTML(match.area) + '</span><br><small>' + escapeHTML(match.summary || "Similar complaint") + '</small></div>').join("");
         warning.hidden = false;
         warning.scrollIntoView({behavior:"smooth", block:"center"});
@@ -2337,7 +2337,14 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     document.getElementById("duplicateCancel").addEventListener("click", () => resolveDuplicateDecision(false));
-    document.getElementById("duplicateSubmitAnyway").addEventListener("click", () => { duplicateOverride = true; resolveDuplicateDecision(true); });
+    document.getElementById("duplicateUseExisting").addEventListener("click", () => resolveDuplicateDecision(true));
+
+    function openExistingGrievance(id){
+        alert("This problem is already registered at the same place.\n\nExisting Grievance ID: " + id + "\n\nYou can use this ID to track the shared complaint.");
+        document.getElementById("trackId").value = id;
+        openPage("track", "Track Complaint");
+        trackComplaint();
+    }
 
     async function findDuplicateComplaints(grievance){
         const session = currentSession();
@@ -2435,7 +2442,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
             if(!duplicateOverride){
                 const duplicates = await findDuplicateComplaints(grievance);
-                if(duplicates.length && !(await requestDuplicateDecision(duplicates))) return;
+                if(duplicates.length){
+                    if(!(await requestDuplicateDecision(duplicates))) return;
+                    duplicateOverride = false;
+                    openExistingGrievance(duplicates[0].id);
+                    return;
+                }
             }
             duplicateOverride = false;
 
@@ -2449,6 +2461,10 @@ document.addEventListener("DOMContentLoaded", function(){
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Complaint could not be submitted.");
+                if(data.duplicate && data.grievance?.id){
+                    openExistingGrievance(data.grievance.id);
+                    return;
+                }
                 saved = data.grievance;
             } catch (error) {
                 alert(`${error.message}\n\nPlease check your login and try again.`);
