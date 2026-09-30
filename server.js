@@ -169,13 +169,13 @@ function authUser(req) {
 }
 
 const AI_RULES = [
-    { category: "Water Supply", department: "Water Works Department", keywords: ["water", "pipe", "leak", "drain", "sewage", "supply", "पानी", "नल", "लीकेज"], action: "Inspect the water line and route the case to the local water works team." },
-    { category: "Street Light", department: "Electrical Department", keywords: ["street light", "streetlight", "lamp", "electric", "power", "wire", "बिजली", "लाइट", "स्ट्रीट लाइट"], action: "Schedule an electrical inspection and replace or repair the light point." },
-    { category: "Sanitation", department: "Sanitation Department", keywords: ["garbage", "waste", "rubbish", "sanitation", "dump", "clean", "कचरा", "सफाई"], action: "Create a sanitation pickup request and inspect the affected area." },
-    { category: "Road & Transport", department: "Public Works Department", keywords: ["road", "pothole", "traffic", "footpath", " सड़क", "गड्ढा", "सड़क"], action: "Verify the location and assign a public works inspection." },
-    { category: "Healthcare", department: "Health Department", keywords: ["hospital", "health", "medicine", "doctor", "clinic", "अस्पताल", "स्वास्थ्य"], action: "Forward the case to the nearest health service authority." },
-    { category: "Education", department: "Education Department", keywords: ["school", "teacher", "education", "classroom", "स्कूल", "शिक्षा"], action: "Route the complaint to the concerned education office." },
-    { category: "Public Safety", department: "Public Safety Department", keywords: ["crime", "theft", "violence", "unsafe", "safety", "police", "चोरी", "सुरक्षा"], action: "Mark the case for priority safety review by the responsible authority." }
+    { category: "Water Supply", department: "Water Works Department", keywords: ["water", "pipe", "leak", "drain", "sewage", "supply", "à¤ªà¤¾à¤¨à¥€", "à¤¨à¤²", "à¤²à¥€à¤•à¥‡à¤œ"], action: "Inspect the water line and route the case to the local water works team." },
+    { category: "Street Light", department: "Electrical Department", keywords: ["street light", "streetlight", "lamp", "electric", "power", "wire", "à¤¬à¤¿à¤œà¤²à¥€", "à¤²à¤¾à¤‡à¤Ÿ", "à¤¸à¥à¤Ÿà¥à¤°à¥€à¤Ÿ à¤²à¤¾à¤‡à¤Ÿ"], action: "Schedule an electrical inspection and replace or repair the light point." },
+    { category: "Sanitation", department: "Sanitation Department", keywords: ["garbage", "waste", "rubbish", "sanitation", "dump", "clean", "à¤•à¤šà¤°à¤¾", "à¤¸à¤«à¤¾à¤ˆ"], action: "Create a sanitation pickup request and inspect the affected area." },
+    { category: "Road & Transport", department: "Public Works Department", keywords: ["road", "pothole", "traffic", "footpath", " à¤¸à¤¡à¤¼à¤•", "à¤—à¤¡à¥à¤¢à¤¾", "à¤¸à¤¡à¤¼à¤•"], action: "Verify the location and assign a public works inspection." },
+    { category: "Healthcare", department: "Health Department", keywords: ["hospital", "health", "medicine", "doctor", "clinic", "à¤…à¤¸à¥à¤ªà¤¤à¤¾à¤²", "à¤¸à¥à¤µà¤¾à¤¸à¥à¤¥à¥à¤¯"], action: "Forward the case to the nearest health service authority." },
+    { category: "Education", department: "Education Department", keywords: ["school", "teacher", "education", "classroom", "à¤¸à¥à¤•à¥‚à¤²", "à¤¶à¤¿à¤•à¥à¤·à¤¾"], action: "Route the complaint to the concerned education office." },
+    { category: "Public Safety", department: "Public Safety Department", keywords: ["crime", "theft", "violence", "unsafe", "safety", "police", "à¤šà¥‹à¤°à¥€", "à¤¸à¥à¤°à¤•à¥à¤·à¤¾"], action: "Mark the case for priority safety review by the responsible authority." }
 ];
 
 function analyzeComplaintText(text, hasPhoto) {
@@ -184,11 +184,11 @@ function analyzeComplaintText(text, hasPhoto) {
         .filter(item => item.matches.length)
         .sort((a, b) => b.matches.length - a.matches.length);
     const best = ranked[0] || { rule: { category: "Other", department: "Public Grievance Cell", action: "Review the complaint manually and route it to the appropriate civic team." }, matches: [] };
-    const urgentWords = ["urgent", "emergency", "danger", "burst", "flood", "fire", "injury", "injured", "accident", "exposed wire", "आपात", "खतरा", "बाढ़"];
+    const urgentWords = ["urgent", "emergency", "danger", "burst", "flood", "fire", "injury", "injured", "accident", "exposed wire", "à¤†à¤ªà¤¾à¤¤", "à¤–à¤¤à¤°à¤¾", "à¤¬à¤¾à¤¢à¤¼"];
     const urgent = urgentWords.some(word => lower.includes(word));
     const priority = urgent ? "Urgent" : (text.length > 180 ? "Important" : "Normal");
     const confidence = Math.min(97, Math.max(64, 64 + (best.matches.length * 9) + (hasPhoto ? 5 : 0) + (urgent ? 3 : 0)));
-    const summary = text.length > 150 ? `${text.slice(0, 147).trim()}…` : text;
+    const summary = text.length > 150 ? `${text.slice(0, 147).trim()}â€¦` : text;
     return { category: best.rule.category, department: best.rule.department, priority, confidence, summary, explanation: best.matches.length ? `Matched signals: ${best.matches.join(", ")}.` : "No strong category signal found; human review is recommended.", recommendedAction: best.rule.action, photoInsight: hasPhoto ? "Photo evidence attached for officer review." : "No photo attached; adding one can improve verification.", urgent };
 }
 
@@ -270,7 +270,8 @@ app.post("/api/grievances", (req, res) => {
     const user = authUser(req);
     if (!user || user.role !== "user") return res.status(401).json({ error: "User login is required before submitting a grievance." });
     grievance.userId = user.id;
-    const missing = ["name", "mobile", "pincode", "area", "district", "category", "description"].filter(field => !grievance[field]);
+    // Pincode is optional because location detection may not return one.
+    const missing = ["name", "mobile", "area", "district", "category", "description"].filter(field => !grievance[field]);
     if (missing.length) return res.status(400).json({ error: "Required fields are missing.", fields: missing });
     if (!/^\d{10}$/.test(grievance.mobile)) return res.status(400).json({ error: "Mobile number must contain 10 digits." });
     if (grievance.pincode && !/^\d{6}$/.test(grievance.pincode)) return res.status(400).json({ error: "Pincode must contain 6 digits." });
@@ -322,9 +323,9 @@ function analyzeCitizenFeedback(statusSignal, comment) {
     const signal = String(statusSignal || "").trim().toLowerCase();
     const text = String(comment || "").trim().toLowerCase();
     const keywordSets = {
-        still_pending: ["not started", "no action", "still pending", "not resolved", "not fixed", "abhi bhi", "काम शुरू नहीं", "हल नहीं"],
-        in_progress: ["in progress", "work started", "team visited", "under process", "inspection", "काम चल", "कार्यवाही"],
-        resolved: ["resolved", "fixed", "solved", "done", "problem solved", "ठीक", "हल हो", "समस्या समाप्त"]
+        still_pending: ["not started", "no action", "still pending", "not resolved", "not fixed", "abhi bhi", "à¤•à¤¾à¤® à¤¶à¥à¤°à¥‚ à¤¨à¤¹à¥€à¤‚", "à¤¹à¤² à¤¨à¤¹à¥€à¤‚"],
+        in_progress: ["in progress", "work started", "team visited", "under process", "inspection", "à¤•à¤¾à¤® à¤šà¤²", "à¤•à¤¾à¤°à¥à¤¯à¤µà¤¾à¤¹à¥€"],
+        resolved: ["resolved", "fixed", "solved", "done", "problem solved", "à¤ à¥€à¤•", "à¤¹à¤² à¤¹à¥‹", "à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤¸à¤®à¤¾à¤ªà¥à¤¤"]
     };
     const allowed = ["still_pending", "in_progress", "resolved"];
     if (!allowed.includes(signal)) return { status: "Pending", confidence: 72, reason: "The citizen did not select a valid progress option, so the grievance remains pending." };
