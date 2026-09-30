@@ -72,8 +72,15 @@ function verifyPassword(password, stored) {
 
 function createUser(name, identity, password, role, department = null) {
     const now = new Date().toISOString();
-    db.prepare(`INSERT OR IGNORE INTO users (name, identity, password_hash, role, department, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
-        .run(name, identity.toLowerCase(), hashPassword(password), role, department, now);
+    const normalizedIdentity = identity.toLowerCase();
+    db.prepare(`INSERT INTO users (name, identity, password_hash, role, department, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(identity) DO UPDATE SET
+            name = excluded.name,
+            password_hash = excluded.password_hash,
+            role = excluded.role,
+            department = excluded.department`)
+        .run(name, normalizedIdentity, hashPassword(password), role, department, now);
 }
 
 // Local demo accounts keep the prototype immediately usable.
