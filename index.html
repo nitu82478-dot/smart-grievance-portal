@@ -1330,7 +1330,7 @@ td{font-size:12px}
                             <div class="location-picker-head">
                                 <div>
                                     <label for="location">Complaint Location *</label>
-                                    <small class="location-help">Detect your location to fill area, district and pincode automatically.</small>
+                                    <small class="location-help">Detect your location to fill the area and district automatically.</small>
                                 </div>
                                 <div class="location-actions">
                                     <button class="location-btn" id="detectLocationBtn" type="button">📍 Detect my location</button>
@@ -1343,7 +1343,7 @@ td{font-size:12px}
                             <div class="manual-location-fields" id="manualLocationFields" hidden>
                                 <div class="field"><label for="area">Area / Locality *</label><input id="area" placeholder="Example: Neelbad"></div>
                                 <div class="field"><label for="district">District *</label><input id="district" placeholder="Example: Bhopal"></div>
-                                <div class="field"><label for="pincode">Pincode *</label><input id="pincode" maxlength="6" inputmode="numeric" placeholder="6 digit pincode"></div>
+                                <input id="pincode" type="hidden" value="">
                             </div>
                             <input id="ward" type="hidden" value="">
                         </div>
@@ -2389,13 +2389,18 @@ document.addEventListener("DOMContentLoaded", function(){
             if(!/^[0-9]{6}$/.test(pincode)){
 
                 alert(
-                    "Please enter a valid 6 digit pincode."
-                );
-
+                    "Please enter a vali            if(detectedPincode && pincode && pincode !== detectedPincode){
+                alert(`The detected location has pincode ${detectedPincode}. Please use that pincode or detect your location again.`);
                 return;
             }
 
-            if(detectedPincode && pincode !== detectedPincode){alert(`The detected location has pincode ${detectedPincode}. Please use that pincode or detect your location again.`);pincodeInput.focus();return;}const pincodeResult=await verifyPincode(pincode);if(!pincodeResult.valid){alert(pincodeResult.message);pincodeInput.focus();return;}const verifiedDistrict=pincodeResult.offices?.map(office=>office?.District).find(Boolean)||"";const currentDistrict=districtInput.value.trim();const districtNeedsVerification=currentDistrict&&!/tehsil|tahsil/i.test(currentDistrict);if(districtNeedsVerification&&pincodeResult.offices?.length){const normalizedDistrict=currentDistrict.toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim();const districtMatches=pincodeResult.offices.some(office=>String(office?.District||"").toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim()===normalizedDistrict);if(!districtMatches){alert(`Pincode ${pincode} does not match district ${currentDistrict}. Please check the location details.`);pincodeInput.focus();return;}}if(verifiedDistrict&&(!currentDistrict||/tehsil|tahsil/i.test(currentDistrict))){districtInput.value=verifiedDistrict;}if(!document.getElementById("area").value.trim() || !document.getElementById("district").value.trim()){
+            const pincodeResult = pincode ? await verifyPincode(pincode) : { valid:true, offices:[] };
+            if(!pincodeResult.valid){
+                alert(pincodeResult.message);
+                return;
+            }
+
+            const verifiedDistrict=pincodeResult.offices?.map(office=>office?.District).find(Boolean)||"";const currentDistrict=districtInput.value.trim();const districtNeedsVerification=currentDistrict&&!/tehsil|tahsil/i.test(currentDistrict);if(districtNeedsVerification&&pincodeResult.offices?.length){const normalizedDistrict=currentDistrict.toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim();const districtMatches=pincodeResult.offices.some(office=>String(office?.District||"").toLowerCase().replace(/\bdistrict\b/g,"").replace(/[^a-z0-9]+/g," ").trim()===normalizedDistrict);if(!districtMatches){alert(`Pincode ${pincode} does not match district ${currentDistrict}. Please check the location details.`);pincodeInput.focus();return;}}if(verifiedDistrict&&(!currentDistrict||/tehsil|tahsil/i.test(currentDistrict))){districtInput.value=verifiedDistrict;}if(!document.getElementById("area").value.trim() || !document.getElementById("district").value.trim()){
                 alert("Please detect your location or enter the area and district manually.");
                 showManualLocation();
                 return;
