@@ -1536,9 +1536,9 @@ td{font-size:12px}
 
                 <h2>🤖 AI-Assisted Grievance Processing</h2>
 
-                <p>AI Assistance is optional. Describe your problem in simple language and it will suggest the category, urgency and department. You can review the suggestion before opening the complaint form.</p>
+                <p>Start by describing your problem in simple language. The assistant will suggest the category, urgency and department before opening the complaint form.</p>
 
-                <div class="ai-route-note">💡 Use AI when you need help choosing the right department. A user login is required before submitting the final complaint.</div>
+                <div class="ai-route-note">🔐 Your login keeps the AI suggestion, location, evidence and final complaint linked to one citizen account.</div>
 
                 <div class="ai-demo">
                     <div class="ai-input-panel">
@@ -1997,16 +1997,25 @@ document.addEventListener("DOMContentLoaded", function(){
     function nextPageAfterLogin(user){
         const pendingPage = sessionStorage.getItem("pendingPageAfterLogin");
         sessionStorage.removeItem("pendingPageAfterLogin");
-        if(user.role === "user" && pendingPage === "register") return ["register", "Register Grievance"];
+        if(user.role === "user") return ["ai", "AI Assistance"];
         return user.role === "department" ? ["departmentDashboard", "Department Dashboard"] : ["userDashboard", "User Dashboard"];
     }
 
     function openPage(pageId, title){
 
+        if(pageId === "ai"){
+            const session = currentSession();
+            if(!session || session.role !== "user"){
+                sessionStorage.setItem("pendingPageAfterLogin", "ai");
+                openLoginPage("user");
+                return;
+            }
+        }
+
         if(pageId === "register"){
             const session = currentSession();
             if(!session || session.role !== "user"){
-                sessionStorage.setItem("pendingPageAfterLogin", "register");
+                sessionStorage.setItem("pendingPageAfterLogin", "ai");
                 openLoginPage("user");
                 return;
             }
@@ -2687,6 +2696,7 @@ const verifiedDistrict=pincodeResult.offices?.map(office=>office?.District).find
                         document.getElementById("citizenName").value = session.name || "";
                         if(/^\d{10}$/.test(session.identity || "")) document.getElementById("mobile").value = session.identity;
                     }
+                    sessionStorage.setItem("aiReviewedForComplaint", "1");
                     openPage("register", "Register Grievance");
                     document.getElementById("description").focus();
                 });
