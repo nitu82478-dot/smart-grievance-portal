@@ -1006,11 +1006,11 @@ td{font-size:12px}
 .location-btn:disabled{opacity:.65;cursor:wait}
 .manual-location-btn{border-color:#d6e0ed;background:#fff;color:#526074}
 .location-status{min-height:16px;margin-top:9px;color:#64748b;font-size:11px}
-.location-status.success{color:#15803d}.location-status.error{color:#b91c1c}
+.location-status.success{color:#15803d}.location-status.error{color:#b91c1c}.location-status.warning{color:#a16207}
 .location-summary{margin-top:9px;padding:9px 10px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:11px;line-height:1.45}
 .location-summary[hidden],.manual-location-fields[hidden]{display:none!important}
 .manual-location-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:11px;padding-top:11px;border-top:1px dashed #dbe7f5}
-@media(max-width:700px){.location-picker-head{display:block}.location-actions{margin-top:10px}.manual-location-fields{grid-template-columns:1fr}}
+@media(max-width:900px){.manual-location-fields{grid-template-columns:1fr 1fr}}@media(max-width:700px){.location-picker-head{display:block}.location-actions{margin-top:10px}.manual-location-fields{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -1373,12 +1373,7 @@ td{font-size:12px}
                             </select>
                         </div>
 
-                        <div class="field full">
-                            <label>Exact Location / Landmark</label>
-                            <input id="location" placeholder="Street, landmark or nearby location">
-                        </div>
-
-                        <div class="field full">
+                <div class="field full">
                             <label>Grievance Description *</label>
                             <div class="voice-input-wrap">
                                 <textarea id="description" required placeholder="Explain your problem clearly..."></textarea>
@@ -1921,32 +1916,7 @@ document.addEventListener("DOMContentLoaded", function(){
         return "Location could not be detected. You can enter the details manually.";
     }
 
-    async function reverseGeocode(position){
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        const url = new URL("https://nominatim.openstreetmap.org/reverse");
-        url.search = new URLSearchParams({ format:"jsonv2", lat:String(latitude), lon:String(longitude), zoom:"18", addressdetails:"1" }).toString();
-        const response = await fetch(url, { headers:{ Accept:"application/json" } });
-        if(!response.ok) throw new Error("Address lookup is temporarily unavailable.");
-        const data = await response.json();
-        const address = data.address || {};
-        const district = address.city || address.town || address.municipality || address.county || address.state_district || "";
-        const area = address.suburb || address.neighbourhood || address.quarter || address.village || address.city_district || district || "";
-        const pincodeMatch = String(address.postcode || "").match(/\d{6}/);
-        const pincode = pincodeMatch ? pincodeMatch[0] : "";
-        const road = [address.house_number, address.road].filter(Boolean).join(" ");
-        const readable = [road, area, district, address.state, pincode].filter(Boolean).join(", ");
-        if(!area || !district || !pincode) throw new Error("The location service did not return a complete address. Please enter the area and pincode manually.");
-        areaInput.value = area;
-        districtInput.value = district;
-        pincodeInput.value = pincode;
-        locationInput.value = `${readable} (GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
-        locationSummary.textContent = `✓ Detected: ${readable}. Please check it before submitting.`;
-        locationSummary.hidden = false;
-        manualLocationFields.hidden = true;
-        setLocationStatus("Location detected successfully.", "success");
-        detectLocationBtn.textContent = "↻ Detect again";
-    }
+    async function reverseGeocode(position){const latitude=position.coords.latitude;const longitude=position.coords.longitude;const url=new URL("https://nominatim.openstreetmap.org/reverse");url.search=new URLSearchParams({format:"jsonv2",lat:String(latitude),lon:String(longitude),zoom:"18",addressdetails:"1"}).toString();const response=await fetch(url,{headers:{Accept:"application/json"}});if(!response.ok)throw new Error("Address lookup is temporarily unavailable.");const data=await response.json();const address=data.address||{};const district=address.city||address.town||address.municipality||address.county||address.state_district||address.district||"";const area=address.suburb||address.neighbourhood||address.quarter||address.village||address.city_district||address.residential||address.locality||address.hamlet||address.road||district||"";const postalText=[address.postcode,data.display_name].filter(Boolean).join(" ");const pincodeMatch=postalText.match(/\b\d{6}\b/);const pincode=pincodeMatch?pincodeMatch[0]:"";const road=[address.house_number,address.road].filter(Boolean).join(" ");const readable=[road,area,district,address.state,pincode].filter(Boolean).join(", ")||data.display_name||("GPS "+latitude.toFixed(5)+", "+longitude.toFixed(5));areaInput.value=area;districtInput.value=district;pincodeInput.value=pincode;locationInput.value=readable+" (GPS: "+latitude.toFixed(5)+", "+longitude.toFixed(5)+")";const missing=[];if(!area)missing.push("area");if(!district)missing.push("district");if(!pincode)missing.push("pincode");manualLocationFields.hidden=missing.length===0;locationSummary.textContent=missing.length?"✓ Location detected: "+readable+". Please enter the missing "+missing.join(" and ")+" below.":"✓ Detected: "+readable+". Please check it before submitting.";locationSummary.hidden=false;setLocationStatus(missing.length?"Location detected. Please complete the highlighted missing details.":"Location detected successfully.",missing.length?"warning":"success");detectLocationBtn.textContent="↻ Detect again";}
 
     async function detectCurrentLocation(){
         if(!navigator.geolocation){
